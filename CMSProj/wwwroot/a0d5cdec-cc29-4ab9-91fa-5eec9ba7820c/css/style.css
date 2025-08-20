@@ -1,0 +1,27 @@
+﻿.cute-animal-img {
+    width: 150px;
+    height: 150px;
+    object-fit: cover;
+    border-radius: 50%;
+    position: absolute;
+    top: 20%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+@media (max-width: 576px) {
+    .cute-animal-img {
+        width: 100px;
+        height: 100px;
+        top: 15%;
+    }
+
+    h1.display-1 {
+        font-size: 5rem;
+    }
+
+    p.fs-4 {
+        font-size: 1.2rem;
+    }
+}

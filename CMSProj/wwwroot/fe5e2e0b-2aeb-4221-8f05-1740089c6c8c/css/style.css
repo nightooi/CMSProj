@@ -1,0 +1,26 @@
+﻿/* GenericCompany brand palette */
+:root {
+    --gc-primary: #0063B1; /* corporate blue */
+    --gc-accent: #00A675; /* accent green */
+}
+
+body {
+    scroll-behavior: smooth;
+}
+
+/* Override Bootstrap’s primary colour */
+.bg-primary,
+.btn-primary {
+    background-color: var(--gc-primary) !important;
+    border-color: var(--gc-primary) !important;
+}
+
+    .btn-primary:hover,
+    .btn-primary:focus {
+        background-color: var(--gc-accent) !important;
+        border-color: var(--gc-accent) !important;
+    }
+
+footer {
+    background: var(--gc-primary);
+}

@@ -1,0 +1,10 @@
+﻿@using CMSProj.Controllers;
+@model RenderContent;
+@{
+    ViewData["Title"] = "Home Page";
+}
+
+@foreach(var str in Model.InjectBody())
+{
+    @Html.Raw(str)
+}
