@@ -1,5 +1,6 @@
-using System.Text.RegularExpressions;
+using Microsoft.Identity.Client;
 
+using System.Text.RegularExpressions;
 public class RouteRepository : IRouteRepository, IPostActivator<IRouteRepository>
 {
     const string delimiter = "&&";
@@ -28,17 +29,24 @@ public class RouteRepository : IRouteRepository, IPostActivator<IRouteRepository
 
         return null;
     }
-
+    /// <summary>
+    /// This is incomplete and doesnt cover the full url resolution schema.
+    /// 
+    /// Also needs to be adjusted if paramters are sent over the url.
+    /// </summary>
+    /// <param name="route"></param>
+    /// <returns></returns>
     private string MatchRoute(string? route)
     {
         if (route is null)
             return "Home/Index";
-
+        Array.BinarySearch(ExistingRoutes.ToArray(), route.Take(3));
         Regex regex = routeMatcherFactory
             .Create(route);
 
         foreach(var defined in ExistingRoutes)
         {
+            
             if (regex.IsMatch(defined))
                 return defined;
         }
@@ -50,7 +58,7 @@ public class RouteRepository : IRouteRepository, IPostActivator<IRouteRepository
         if (guid is not null)
             return guid;
         if(_routes is null)
-            await InitializeAsync();
+            await InitializeAsync(new CancellationToken());
 
         return GetPageGuid(route);
     }
@@ -89,30 +97,27 @@ public class RouteRepository : IRouteRepository, IPostActivator<IRouteRepository
             }
         }
     }
-    public async Task<IRouteRepository> InitializeAsync()
+    public async Task<IRouteRepository> InitializeAsync(CancellationToken token)
     {
         await ExcavatePages();
         return this;
     }
 
-    public IEnumerable<Guid> GetAvailableRoutes()
+    public void GetAvailableRoutes()
     {
         if(_routes.Values is null || _routes.Values.Count <= 0)
         {
             this.Initialize();
-            return _routes.Values;
         }
-        return _routes.Values;
     }
 
-    public async Task<IEnumerable<Guid>> GetAvailableRoutesAsync()
+    public Task? GetAvailableRoutesAsync(CancellationToken token)
     {
         if(_routes.Values is null || _routes.Values.Count <= 0)
         {
-            await this.InitializeAsync();
-            return _routes.Values;
+            return this.InitializeAsync(token);
         }
-        return _routes.Values;
+        return null;
     }
 }
 

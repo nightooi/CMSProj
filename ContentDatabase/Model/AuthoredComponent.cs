@@ -1,8 +1,11 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using Microsoft.EntityFrameworkCore;
+
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace ContentDatabase.Model
 {
+    [PrimaryKey(nameof(Id))]
     public class AuthoredComponent : CreationDetails
     {
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
@@ -10,8 +13,8 @@ namespace ContentDatabase.Model
         [ForeignKey(nameof(PageComponent.Id))]
         public Guid PageComponentId { get; set; }
         [ForeignKey(nameof(PageVersion.Id))]
-        public Guid VersionId { get; set; }
-        public string PayLoad { get; set; }
+        public Guid PageVersionId { get; set; }
+        public ComponentMarkup PayLoad { get; set; }
         [MaxLength(1000)]
         //Use Name of Author, Component Position and descriptive Name and Version
         [Required] public string ComponentName { get; set; }

@@ -29,7 +29,6 @@ namespace CMSProj.Controllers
         [HttpGet(Name = "{pageGuid}")]
         public IActionResult RenderPage([FromRoute(Name = "pageGuid")] string pageGuid)
         {
-            
             var pageExcavation = _cmsRepo.GetPageContent(new Guid(pageGuid));
             var content = new RenderContent() { Content = pageExcavation };
 

@@ -1,7 +1,10 @@
-﻿using System.ComponentModel.DataAnnotations.Schema;
+﻿using Microsoft.EntityFrameworkCore;
+
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace ContentDatabase.Model
 {
+    [PrimaryKey(nameof(Id))]
     public class PageVersion : CreationDetails
     {
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]

@@ -4,13 +4,29 @@
     <TargetFramework>net8.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
+    <UserSecretsId>949fe0a8-7e84-4944-b2e6-276e5c465394</UserSecretsId>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="bootstrap" Version="5.3.6" />
     <PackageReference Include="jQuery" Version="3.7.1" />
     <PackageReference Include="jquery.mobile" Version="1.4.5" />
-    <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="8.0.7" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.8" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Abstractions" Version="9.0.8" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Analyzers" Version="9.0.8" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.8">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="9.0.8" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="9.0.8" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="9.0.8">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="9.0.8" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="9.0.8" />
+    <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="9.0.0" />
 
   </ItemGroup>
 
@@ -27,8 +43,13 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Folder Include="DIExtensions\" />
     <Folder Include="wwwroot\46c4f891-9764-447d-8f85-d79cc78c8513\css\" />
     <Folder Include="wwwroot\46c4f891-9764-447d-8f85-d79cc78c8513\js\" />
     <Folder Include="wwwroot\a0d5cdec-cc29-4ab9-91fa-5eec9ba7820c\js\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\ContentDatabase\ContentDatabase.csproj" />
   </ItemGroup>
 </Project>

@@ -5,7 +5,7 @@ public interface IRouteRepository : IPostActivator<IRouteRepository>
 
     //There should be a way to redo this with options pattern
     // likely should be too
-    public IEnumerable<Guid> GetAvailableRoutes();
-    Task<IEnumerable<Guid>> GetAvailableRoutesAsync();
+    public void GetAvailableRoutes();
+    Task GetAvailableRoutesAsync(CancellationToken token);
 }
 

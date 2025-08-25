@@ -14,9 +14,7 @@ public class RouteMatcherFactory : IRouteMatcherFactory
     public Regex Create(string route)
     {
         return new Regex(@$"(?<route>{route})", 
-            RegexOptions.IgnoreCase |
             RegexOptions.Singleline |
-            RegexOptions.IgnorePatternWhitespace |
             RegexOptions.NonBacktracking);
     }
 }

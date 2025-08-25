@@ -5,6 +5,7 @@ using Microsoft.AspNetCore;
 using System.Collections.Generic;
 using System.Reflection.Metadata.Ecma335;
 using System.Threading.Tasks;
+using ContentDatabase.DIExtensions;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -18,6 +19,7 @@ builder.WebHost.ConfigureKestrel(x => {
 builder.Services.AddControllersWithViews();
 builder.Services.AddExistingRoutesHandler();
 builder.Services.RegisterDynmicServices();
+builder.Services.AddContentContext(builder.Configuration.GetConnectionString("Default")!);
 
 var app = builder.Build();
 

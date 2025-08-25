@@ -6,6 +6,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace ContentDatabase.Model
 {
     [Index(nameof(FileType), IsUnique =true)]
+    [PrimaryKey(nameof(Id))]
     public class AssetFileType
     {
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]

@@ -1,7 +1,10 @@
-﻿using System.ComponentModel.DataAnnotations.Schema;
+﻿using Microsoft.EntityFrameworkCore;
 
-namespace ContentDatabase
+using System.ComponentModel.DataAnnotations.Schema;
+
+namespace ContentDatabase.Model
 {
+    [PrimaryKey(nameof(Id))]
     public class AssetHostDomain
     {
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
