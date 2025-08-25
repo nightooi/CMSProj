@@ -153,24 +153,54 @@ namespace CMSProj.DataLayer.UrlServices
         }
     }
     public enum WorkerState { Initiated, Retrieving, Sorting, MergingManager, Finnished,Failed }
-    public interface IWorkResultOrchestrator<T>
+    /// <summary>
+    /// Started rework of the workupdate interface.
+    /// 
+    /// I noticed that the lifetimes across the dependcy chains didnt line up,
+    ///     the routerepo(singleton) depended on workresultorchestrator which theoretichally should be:
+    ///     scoped or even a transient instance as it's tied to the current updatecycle.
+    ///     
+    ///     solution one is make the orchestrator a singleton and extract the Management of the result object(creation/disposal)
+    ///     into one interface, and the updates that happen down the chain into another and have the objects down the chain
+    ///     depend on only the update interface.
+    ///     Resolution of the update interface object would be done by a factory directly depending on the scope created in the worker.
+    ///         -> doesnt work. :D service providers cant cross scope apparently
+    ///             so we go the singleton route
+    ///     
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
+    public interface IUpdateWorkResult<T>
     {
         public Task RunningTask { get; set; }
         public void UpdateWorkState<U>(U subService, WorkerState state, LogLevel logLevel);
-        public void Log();
+        public void UpdateCurrentTask(Task task);
         public T SnapShot();
     }
-
+    public interface IWorkResultOrchestrator<T> : IUpdateWorkResult<T>, IWorkResultManager<T>
+    {
+    }
+    public interface IWorkResultManager<T> : IDisposable
+    {
+        public T WorkerResult { get; set; }
+        public void Log();
+        public T InitializeWork();
+    }
+    //Singleton, Its state is managed by the BackgroundService, appears stateless down the dependency tree
     public abstract class WorkStateResult<T> : IWorkResultOrchestrator<WorkerResult<T>>
     {
         protected WorkerResultFactory<T> _resultFactory;
-        protected WorkerResult<T> _result;
+        public WorkerResult<T> _result;
         protected abstract ILogger<IWorkResultOrchestrator<WorkerResult<T>>> Logger { get; set; }
         public abstract Task RunningTask { get; set; }
 
+        public WorkerResult<T> WorkerResult { get; set; }
         public abstract void Log();
         public abstract WorkerResult<T> SnapShot();
         public abstract void UpdateWorkState<U>(U subService, WorkerState state, LogLevel logLevel);
+        public abstract void UpdateCurrentTask(Task task);
+        public abstract WorkerResult<T> InitializeWork();
+        public abstract void Dispose();
+
         public WorkStateResult(WorkerResultFactory<T> factory)
         {
             _resultFactory = factory;
@@ -264,21 +294,49 @@ namespace CMSProj.DataLayer.UrlServices
     }
     public interface IUpdateRouteManagerService
     {
-        public void ScheduleUpdate(DateTime time);
         public Task UpdateRoutes(CancellationToken token);
     }
     public interface IRouteUpdateOrchestrator
     {
         public Guid WorkGuid { get; }
         public Task RunningTask { get; }
-        public CancellationToken CancellationToken { get; }
+        public CancellationTokenSource tokenSource { get; }
         public WorkerState CurrentState { get; }
         public IReadOnlyCollection<TimeOnly> StageStamps { get; }
         public TimeSpan UpdateInterval { get; }
     }
+    public class RouteUpdateBackGroundService : BackgroundService, IRouteUpdateOrchestrator
+    {
+        private IServiceScopeFactory _scopeFactory;
+        public Guid WorkGuid => throw new NotImplementedException();
+
+        public Task RunningTask => throw new NotImplementedException();
+
+        public CancellationTokenSource tokenSource => throw new NotImplementedException();
+
+        public WorkerState CurrentState => throw new NotImplementedException();
+
+        public IReadOnlyCollection<TimeOnly> StageStamps => throw new NotImplementedException();
+
+        public TimeSpan UpdateInterval => throw new NotImplementedException();
+
+        public RouteUpdateBackGroundService(IServiceScopeFactory scopeFactory)
+        {
+            _scopeFactory = scopeFactory;
+        }
+
+        protected override Task ExecuteAsync(CancellationToken stoppingToken)
+        {
+            using (var scope = _scopeFactory.CreateScope())
+            {
+                var updateRoutes = scope.ServiceProvider.GetRequiredService<IUpdateRouteManagerService>();
+                var 
+            }
+
+        }
+    }
     public class UpdateRouteManager : IUpdateRouteManagerService, IDisposable
     {
-        public List<DateTime> _updateSchedule = new();
 
         readonly TimeSpan _span = TimeSpan.FromMinutes(5);
         public TimeSpan UpdateInterval => _span;
@@ -318,17 +376,14 @@ namespace CMSProj.DataLayer.UrlServices
             await RouteRepository.GetAvailableRoutesAsync(token);
         }
 
-        public void ScheduleUpdate(DateTime time)
-        {
-            throw new NotImplementedException();
-        }
-
         public void Dispose()
         {
-            throw new NotImplementedException();
+            if (RunningTask.IsCompleted)
+            {
+                RunningTask.Dispose();
+            }
         }
     }
-
     public class UrlGuidAdapter
     {
         public Guid Guid { get; set; }

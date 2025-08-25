@@ -9,19 +9,24 @@ public class DbRouteRepository : IRouteRepository, IPostActivator<IRouteReposito
 {
     Dictionary<string, Guid> _routes;
     IRouteMatcherFactory routeMatcherFactory;
-    IReadOnlyDictionary<string, Guid> Routes => _routes;
-
 
     //At home hot cache
     IOrderedEnumerable<string> _existingRoutes;
 
-    IUrlRetrievalService urlRetrievalService;
+    IUrlRetrievalService _urlRetrievalService;
     Task<ICollection<UrlGuidAdapter>> _currentUpdate;
     Task<IOrderedEnumerable<string>> _updatingRoutesCacheTask;
-
+    IWorkResultOrchestrator<WorkerResult<int>> _resultOrchestrator;
+    public DbRouteRepository(
+        IUrlRetrievalService urlRetrievalService,
+        IWorkResultOrchestrator<WorkerResult<int>> resultOrchestrator)
+    {
+        _urlRetrievalService = urlRetrievalService;
+        _resultOrchestrator = resultOrchestrator;
+    }
     public void GetAvailableRoutes()
     {
-        var res = urlRetrievalService.GetUrls();
+        var res = _urlRetrievalService.GetUrls();
         AddUrls(res);
    }
     private void AddUrls(ICollection<UrlGuidAdapter> urlCollection)
@@ -34,8 +39,9 @@ public class DbRouteRepository : IRouteRepository, IPostActivator<IRouteReposito
     }
     public async Task GetAvailableRoutesAsync(CancellationToken token)
     {
-        _currentUpdate = urlRetrievalService.GetUrlsAsync(token);
+        _currentUpdate = _urlRetrievalService.GetUrlsAsync(token);
         var res = await _currentUpdate;
+        _resultOrchestrator.UpdateWorkState(this, WorkerState.Sorting, LogLevel.Information);
         AddUrls(res);
         ///this will probably land me in jail, alas i do not have time to implmenet a hot cache.
         try
@@ -45,13 +51,19 @@ public class DbRouteRepository : IRouteRepository, IPostActivator<IRouteReposito
                 _updatingRoutesCacheTask = Task.Run<IOrderedEnumerable<string>>(_routes.Keys.Order, token);
                 _existingRoutes = await _updatingRoutesCacheTask;
             }
+            _resultOrchestrator.UpdateWorkState(this, WorkerState.MergingManager, LogLevel.Information);
+        }
+        catch(Exception exc)
+        {
+            _resultOrchestrator.UpdateWorkState(this, WorkerState.MergingManager, LogLevel.Error);
+            _resultOrchestrator.Log();
+            throw new Exception("Threw In RouteRepo During RouteUpdate", exc);
         }
         finally
         {
             _currentUpdate.Dispose();
             _updatingRoutesCacheTask.Dispose();
         }
-
     }
 
     public Guid? GetPageGuid(string? route)
