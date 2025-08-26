@@ -17,12 +17,17 @@ namespace ContentDatabase
         public DbSet<AssetHostDomain> AssetHostDomains { get; set; }
         public DbSet<Assets> Assets { get; set; }
         public DbSet<Author> Authors { get; set; }
-        public DbSet<AuthoredComponent> AuothoredComponents { get; set; }
+        public DbSet<AuthoredComponent> AuthoredComponents { get; set; }
         public DbSet<Page> Pages { get; set; }
         public DbSet<PageTemplate> PageTemplates { get; set; }
         public DbSet<PageVersion> PageVersions { get; set; }
         public DbSet<ComponentMarkup> ComponentMarkups { get; set; }
+        public DbSet<PageComponent> PageComponents { get; set; }
         public ContentContext(DbContextOptions<ContentContext> opts) : base(opts)
+        {
+
+        }
+        public ContentContext() : base()
         {
 
         }

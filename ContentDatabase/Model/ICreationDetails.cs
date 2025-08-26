@@ -1,12 +1,12 @@
-﻿using System.ComponentModel.DataAnnotations.Schema;
-
-namespace ContentDatabase.Model
+﻿namespace ContentDatabase.Model
 {
-    public abstract class CreationDetails : ICreationDetails
+    public interface ICreationDetails
     {
+        //Time of authoring
         public DateTime Constructed { get; set; }
+        //Last time of generation to the FileSystem(ready for to Serve)
         public DateTime? Generated { get; set; }
-        [ForeignKey(nameof(CreationAuthor.Id))]
+        //Time of Publishing(First time Live)
         public Guid RevisionAuthorId { get; set; }
         public DateTime Published { get; set; }
         public Guid? AuthorId { get; set; }
@@ -15,11 +15,6 @@ namespace ContentDatabase.Model
         public Author CreationAuthor { get; set; }
         public DateTime LastRevisionTime { get; set; }
         public string? RevisionDiff { get; set; }
-        [NotMapped]
         public ICollection<Author> RevisionAuthor { get; set; }
-    }
-    public interface IVersionable
-    {
-        public int Version { get; set; }
     }
 }

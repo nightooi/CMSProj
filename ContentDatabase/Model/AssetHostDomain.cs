@@ -5,7 +5,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace ContentDatabase.Model
 {
     [PrimaryKey(nameof(Id))]
-    public class AssetHostDomain
+    public class AssetHostDomain : Id
     {
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public Guid Id { get; }

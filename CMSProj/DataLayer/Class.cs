@@ -1,8 +1,16 @@
-﻿using ContentDatabase;
+﻿using CMSProj.DataLayer.UrlServices;
+
+using ContentDatabase;
 using ContentDatabase.Model;
 
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.Identity.Client;
+
+using System.Diagnostics.CodeAnalysis;
+using System.Linq.Expressions;
 namespace CMSProj.DataLayer
 {
     public interface IContentRetrievalService<T>
@@ -18,6 +26,79 @@ namespace CMSProj.DataLayer
 
         public T RetrieveComponent(Guid guid);
         public Task<T> RetrieveComponentAsync(Guid guid);
+    }
+    public interface IPageRetrieval
+    {
+        public ContentDatabase.Model.Page RetrievePage(string slug);
+        public Task<ContentDatabase.Model.Page> RetrievePageAsync(string slug);
+        public ContentDatabase.Model.Page RetrievePage(Guid guid);
+        public Task<ContentDatabase.Model.Page> RetrievePageAsync(Guid guid);
+    }
+    public class PageRepoSitory : IPageRetrieval
+    {
+        ContentContext Ctx { get; }
+        public PageRepoSitory(ContentContext ctx)
+        {
+            Ctx = ctx;
+        }
+        public ContentDatabase.Model.Page? RetrievePage(string slug)
+        {
+            return Ctx.Pages.SelecLatestPublishedVersionPageByUrl(slug)!
+                .SingleOrDefault();
+        }
+        public ContentDatabase.Model.Page? RetrievePage(Guid guid)
+        {
+            return Ctx.Pages.SingleOrDefault(x => x.Id == guid);
+        }
+        public Task<ContentDatabase.Model.Page?> RetrievePageAsync(string slug)
+        {
+            return Ctx.Pages.SelecLatestPublishedVersionPageByUrl(slug)!
+                .SingleOrDefaultAsync();
+        }
+        public Task<ContentDatabase.Model.Page?> RetrievePageAsync(Guid guid)
+        {
+            return Ctx.Pages.SingleOrDefaultAsync(x => x.Id == guid);
+        }
+    }
+    public static class ContentRetrievalExtensions
+    {
+        public static IQueryable<T>? SelectPublishedItems<T>(this DbSet<T> dbModel) where T : class, ContentDatabase.Model.ICreationDetails
+        {
+            return dbModel.Where(x => x.Published <= DateTime.UtcNow);
+        }
+        public static IQueryable<ContentDatabase.Model.Page> OrderedVersionPage(this DbSet<ContentDatabase.Model.Page> dbModel, string url)
+        {
+            return dbModel
+                .Where(x => x.Slug == url)
+                .OrderBy(x => x.PageVersions
+                .Select(x => x.Version));
+        }
+        public static IQueryable<ContentDatabase.Model.Page>? SelecLatestPublishedVersionPageByUrl(this DbSet<ContentDatabase.Model.Page> dbModel, string url)
+        {
+            return dbModel
+                .OrderedVersionPage(url)
+                .Where(x => x.Published <= DateTime.UtcNow)
+                .Include(x => x.PageVersions
+                .Where(x => x.Components
+                .All(x => x.Published <= DateTime.UtcNow && x.Published <= DateTime.UtcNow))
+                .OrderBy(x=> x.Version)
+                .Take(1));
+        }
+        public static IQueryable<T>? SelectPublishedItems<T>(this IQueryable<T> dbModel) where T : class, ContentDatabase.Model.ICreationDetails
+        {
+            return dbModel.Where(x => x.Published <= DateTime.UtcNow);
+        }
+        public static IQueryable<ContentDatabase.Model.Page>? SelecPageByUrl(this IQueryable<ContentDatabase.Model.Page> dbModel, string url)
+        {
+            return dbModel.Where(x => x.Slug == url);
+        }
+        public static IQueryable<T> SelectLatestVersion<T>(this IQueryable<T> queryable) where T : class, IVersionable
+        {
+            return queryable
+                .OrderBy(x => x.Version)
+                .Take(1);
+        }
+
     }
 
     public interface IPageOrchestratorService
@@ -41,10 +122,11 @@ namespace CMSProj.DataLayer
     
     public class PageOrchestrator : IPageOrchestratorService
     {
-        IContentRetrievalService<PageScaffold> scaffoldRetrieval { get; }
-        IContentRetrievalService<Asset> assetRetrieval { get; }
-        IContentRetrievalService<Page> pageRetrieval { get; }
-        IContentRetrievalService<ContentComponent> componentRetrieval { get; }
+        ContentDatabase
+        IContentRetrievalService<PageScaffold> ScaffoldRetrieval { get; }
+        IContentRetrievalService<Asset> AssetRetrieval { get; }
+        IContentRetrievalService<Page> PageRetrieval { get; }
+        IContentRetrievalService<ContentComponent> ComponentRetrieval { get; }
 
         public PageOrchestrator(
             IContentRetrievalService<PageScaffold> scaffoldService,
@@ -52,36 +134,17 @@ namespace CMSProj.DataLayer
             IContentRetrievalService<Page> pageService,
             IContentRetrievalService<ContentComponent> componentService)
         {
-            scaffoldRetrieval = scaffoldService;
-            assetRetrieval = assetService
+            ScaffoldRetrieval = scaffoldService;
+            AssetRetrieval = assetService;
+            ComponentRetrieval = componentService;
         }
 
-        public Page ConstructCompletePage(Page scaffoldedPage)
+        public Page ConstructCompletePage(PageScaffold scaffoldedPage)
         {
             throw new NotImplementedException();
         }
 
-        public Task<Page> ConstructCompletePageAsync(Page scaffoldedPage)
-        {
-            throw new NotImplementedException();
-        }
-
-        public Page ConstructedCompletePage(string url)
-        {
-            throw new NotImplementedException();
-        }
-
-        public Task<Page> ConstructedCompletePageAsync(string url)
-        {
-            throw new NotImplementedException();
-        }
-
-        public Page ScaffoldedPage(string url)
-        {
-            throw new NotImplementedException();
-        }
-
-        public Task<Page> ScaffoldedPageAsync(string url)
+        public Task<Page> ConstructCompletePageAsync(PageScaffold scaffoldedPage)
         {
             throw new NotImplementedException();
         }
@@ -92,6 +155,26 @@ namespace CMSProj.DataLayer
         }
 
         public Task<Page> ScaffoldPageAsync(Guid guid)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Page ScaffoldedPage(string url)
+        {
+            c
+        }
+
+        public Task<Page> ScaffoldedPageAsync(string url)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Page ConstructedCompletePage(string url)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<Page> ConstructedCompletePageAsync(string url)
         {
             throw new NotImplementedException();
         }
@@ -266,12 +349,13 @@ namespace CMSProj.DataLayer
     public abstract class CMSContent
     {
         public Guid Guid { get; }
-        public string Html { get; private set; }
+        public ContentDatabase.DeserliazationTypes.CLRComponentMarkup Html { get; set; }
+        public ContentDatabase.DeserliazationTypes.CLRComponentContent Content { get; set; }
         public DateTime PublishDate { get; }
     }
     public class Asset : CMSContent
     {
-        public string Url { get; }
+        public string Uri { get; }
         public string AssetFiletype { get; }
     }
 

@@ -6,7 +6,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace ContentDatabase.Model
 {
     [PrimaryKey(nameof(Id))]
-    public class Page : CreationDetails
+    public class Page : CreationDetails, Id
     {
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public Guid Id { get; }
@@ -15,6 +15,6 @@ namespace ContentDatabase.Model
         [MaxLength(200)]
         [Key] public string PageName { get; set; }
         public PageTemplate PageTemplate { get; set; }
-        public ICollection<PageVersion>? PageComponenets { get; set; } = new List<PageVersion>();
+        public ICollection<PageVersion>? PageVersions { get; set; } = new List<PageVersion>();
     }
 }

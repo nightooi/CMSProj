@@ -1,7 +1,10 @@
-﻿namespace ContentDatabase.Model
+﻿using System.ComponentModel.DataAnnotations.Schema;
+
+namespace ContentDatabase.Model
 {
-    public class ComponentMarkup : CreationDetails
+    public class ComponentMarkup : CreationDetails, Id
     {
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public Guid Id { get; }
         /// <summary>
         ///     Json Dump

@@ -7,10 +7,10 @@ namespace ContentDatabase.Model
 {
     [Index(nameof(FileType), IsUnique =true)]
     [PrimaryKey(nameof(Id))]
-    public class AssetFileType
+    public class AssetFileType : Id
     {
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-        public int Id { get; }
+        public Guid Id { get; }
         [MaxLength(20)]
         public string FileType { get; set; }
         public ICollection<Assets>? Assets { get; set; } = null!;

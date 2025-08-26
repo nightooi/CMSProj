@@ -13,20 +13,25 @@ public class DbRouteRepository : IRouteRepository, IPostActivator<IRouteReposito
     //At home hot cache
     IOrderedEnumerable<string> _existingRoutes;
 
-    IUrlRetrievalService _urlRetrievalService;
+    IUrlRetrievalService UrlRetrievalService;
     Task<ICollection<UrlGuidAdapter>> _currentUpdate;
     Task<IOrderedEnumerable<string>> _updatingRoutesCacheTask;
-    IWorkResultOrchestrator<WorkerResult<int>> _resultOrchestrator;
+    IUpdateWorkResult<WorkerResult<int>> ResultOrchestrator;
+
+    ILogger<DbRouteRepository> Logger { get; set; }
+
     public DbRouteRepository(
         IUrlRetrievalService urlRetrievalService,
-        IWorkResultOrchestrator<WorkerResult<int>> resultOrchestrator)
+        IUpdateWorkResult<WorkerResult<int>> updateResult,
+        ILogger<DbRouteRepository> logger)
     {
-        _urlRetrievalService = urlRetrievalService;
-        _resultOrchestrator = resultOrchestrator;
+        UrlRetrievalService = urlRetrievalService;
+        ResultOrchestrator = updateResult;
+        Logger = logger;
     }
     public void GetAvailableRoutes()
     {
-        var res = _urlRetrievalService.GetUrls();
+        var res = UrlRetrievalService.GetUrls();
         AddUrls(res);
    }
     private void AddUrls(ICollection<UrlGuidAdapter> urlCollection)
@@ -39,9 +44,9 @@ public class DbRouteRepository : IRouteRepository, IPostActivator<IRouteReposito
     }
     public async Task GetAvailableRoutesAsync(CancellationToken token)
     {
-        _currentUpdate = _urlRetrievalService.GetUrlsAsync(token);
+        _currentUpdate = UrlRetrievalService.GetUrlsAsync(token);
         var res = await _currentUpdate;
-        _resultOrchestrator.UpdateWorkState(this, WorkerState.Sorting, LogLevel.Information);
+        ResultOrchestrator.UpdateWorkState(this, WorkerState.Sorting, LogLevel.Information);
         AddUrls(res);
         ///this will probably land me in jail, alas i do not have time to implmenet a hot cache.
         try
@@ -51,13 +56,12 @@ public class DbRouteRepository : IRouteRepository, IPostActivator<IRouteReposito
                 _updatingRoutesCacheTask = Task.Run<IOrderedEnumerable<string>>(_routes.Keys.Order, token);
                 _existingRoutes = await _updatingRoutesCacheTask;
             }
-            _resultOrchestrator.UpdateWorkState(this, WorkerState.MergingManager, LogLevel.Information);
+            ResultOrchestrator.UpdateWorkState(this, WorkerState.MergingManager, LogLevel.Information);
         }
         catch(Exception exc)
         {
-            _resultOrchestrator.UpdateWorkState(this, WorkerState.MergingManager, LogLevel.Error);
-            _resultOrchestrator.Log();
-            throw new Exception("Threw In RouteRepo During RouteUpdate", exc);
+            ResultOrchestrator.UpdateWorkState(this, WorkerState.MergingManager, LogLevel.Error);
+            Logger.Log(LogLevel.Error, $"{exc.Message} \n {exc.InnerException.Message}");
         }
         finally
         {

@@ -7,7 +7,7 @@ namespace ContentDatabase.Model
 {
     [Index(nameof(Url), IsUnique =true)]
     [PrimaryKey(nameof(Id))]
-    public class Assets : CreationDetails
+    public class Assets : CreationDetails, Id
     {
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public Guid Id { get; }
