@@ -1,4 +1,6 @@
-﻿namespace CMSProj.DataLayer.UrlServices
+﻿using CMSProj.DataLayer.UrlServices.Factories;
+
+namespace CMSProj.DataLayer.UrlServices
 {
     public class RouteManagerWorkerState : WorkStateResult<int>
     {

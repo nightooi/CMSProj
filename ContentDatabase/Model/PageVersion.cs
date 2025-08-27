@@ -11,8 +11,11 @@ namespace ContentDatabase.Model
         public Guid Id { get; }
         [ForeignKey(nameof(Page.Id))]
         public Guid PageId { get; set; }
+        [ForeignKey(nameof(Page.Id))]
+        public Guid PageTemplateId { get; set; }
         public int Version { get; set; }
         public Page Page { get; set; } = null!;
+        public PageTemplate PageTemplate { get; set; } = null!;
         public ICollection<AuthoredComponent> Components { get; set; } = new List<AuthoredComponent>();
     }
 }

@@ -23,6 +23,8 @@ namespace ContentDatabase
         public DbSet<PageVersion> PageVersions { get; set; }
         public DbSet<ComponentMarkup> ComponentMarkups { get; set; }
         public DbSet<PageComponent> PageComponents { get; set; }
+        public DbSet<PageSlug> PageSlugs { get; set; }
+        public DbSet<PulishedPageSlug> PublishedPages { get; set; }
         public ContentContext(DbContextOptions<ContentContext> opts) : base(opts)
         {
 

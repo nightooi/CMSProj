@@ -12,10 +12,15 @@ namespace ContentDatabase.Model
         [Required]
         [Key] public Guid Id { get; }
         [MaxLength(3000)]
-        public string ComponentPosition { get; set; }
+
+        [ForeignKey(nameof(PageTemplate.Id))]
+        [Required] public Guid TemplateId { get; set; }
+        public string ComponentHtml { get; set; }
+        //0 Based index where child insertion happens
         public int ChildOffset { get; set; }
+        //0 Based on how many components before self
         public int SelfPageOrder { get; set; }
         public ICollection<AuthoredComponent> AuthoredComponent { get; set; } = new List<AuthoredComponent>();
-        public ICollection<PageTemplate> PageTemplate { get; set; } = new List<PageTemplate>();
+        public PageTemplate PageTemplate { get; set; } = null!;
     }
 }

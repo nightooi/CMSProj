@@ -8,6 +8,7 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.Identity.Client;
+using Microsoft.IdentityModel.Tokens;
 
 using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
@@ -27,12 +28,13 @@ namespace CMSProj.DataLayer
         public T RetrieveComponent(Guid guid);
         public Task<T> RetrieveComponentAsync(Guid guid);
     }
+
     public interface IPageRetrieval
     {
         public ContentDatabase.Model.Page RetrievePage(string slug);
-        public Task<ContentDatabase.Model.Page> RetrievePageAsync(string slug);
-        public ContentDatabase.Model.Page RetrievePage(Guid guid);
-        public Task<ContentDatabase.Model.Page> RetrievePageAsync(Guid guid);
+        public Task<ContentDatabase.Model.Page> RetrievePageAsync(string slug, CancellationToken? cancellationToken);
+        public ContentDatabase.Model.Page RetrievePage(Guid slugGuid);
+        public Task<ContentDatabase.Model.Page> RetrievePageAsync(Guid slugGuid, CancellationToken? cancellationTokan);
     }
     public class PageRepoSitory : IPageRetrieval
     {
@@ -43,62 +45,90 @@ namespace CMSProj.DataLayer
         }
         public ContentDatabase.Model.Page? RetrievePage(string slug)
         {
-            return Ctx.Pages.SelecLatestPublishedVersionPageByUrl(slug)!
-                .SingleOrDefault();
+            var guid = Ctx.PageSlugs.SlugGuidByUrl(slug).SingleOrDefault();
+            return RetrieveBySlug(guid).SingleOrDefault();
         }
-        public ContentDatabase.Model.Page? RetrievePage(Guid guid)
+
+        public ContentDatabase.Model.Page? RetrievePage(Guid slugGuid)
         {
-            return Ctx.Pages.SingleOrDefault(x => x.Id == guid);
+            return RetrieveBySlug(slugGuid).SingleOrDefault();
         }
-        public Task<ContentDatabase.Model.Page?> RetrievePageAsync(string slug)
+
+        public async Task<ContentDatabase.Model.Page?> RetrievePageAsync(string slug, CancellationToken? cancellationToken)
         {
-            return Ctx.Pages.SelecLatestPublishedVersionPageByUrl(slug)!
+            var guid = await Ctx.PageSlugs.SlugGuidByUrl(slug).SingleOrDefaultAsync(cancellationToken.Value);
+            if (cancellationToken is not null)
+            {
+                return await RetrieveBySlug(guid).SingleOrDefaultAsync(cancellationToken.Value);
+            }
+            return await RetrieveBySlug(guid).SingleOrDefaultAsync();
+ 
+        }
+
+        public Task<ContentDatabase.Model.Page?> RetrievePageAsync(Guid slugGuid, CancellationToken? cancellationToken)
+        {
+            if(cancellationToken is not null)
+               return RetrieveBySlug(slugGuid)
+                    .SingleOrDefaultAsync(cancellationToken.Value);
+
+            return RetrieveBySlug(slugGuid)
                 .SingleOrDefaultAsync();
         }
-        public Task<ContentDatabase.Model.Page?> RetrievePageAsync(Guid guid)
+
+        private IQueryable<ContentDatabase.Model.Page> RetrieveBySlug(Guid slug)
         {
-            return Ctx.Pages.SingleOrDefaultAsync(x => x.Id == guid);
+            return Ctx.PublishedPages
+                .Include(x=> x.PageVersion)
+                .LoadePageVersion()
+                .PageBySlugGuid(slug);
         }
     }
     public static class ContentRetrievalExtensions
     {
-        public static IQueryable<T>? SelectPublishedItems<T>(this DbSet<T> dbModel) where T : class, ContentDatabase.Model.ICreationDetails
-        {
-            return dbModel.Where(x => x.Published <= DateTime.UtcNow);
-        }
-        public static IQueryable<ContentDatabase.Model.Page> OrderedVersionPage(this DbSet<ContentDatabase.Model.Page> dbModel, string url)
+        public static IQueryable<ContentDatabase.Model.PageVersion> PublishedLatestVersion(this IQueryable<ContentDatabase.Model.Page> dbModel)
         {
             return dbModel
-                .Where(x => x.Slug == url)
-                .OrderBy(x => x.PageVersions
-                .Select(x => x.Version));
-        }
-        public static IQueryable<ContentDatabase.Model.Page>? SelecLatestPublishedVersionPageByUrl(this DbSet<ContentDatabase.Model.Page> dbModel, string url)
-        {
-            return dbModel
-                .OrderedVersionPage(url)
                 .Where(x => x.Published <= DateTime.UtcNow)
-                .Include(x => x.PageVersions
-                .Where(x => x.Components
-                .All(x => x.Published <= DateTime.UtcNow && x.Published <= DateTime.UtcNow))
-                .OrderBy(x=> x.Version)
-                .Take(1));
+                .SelectMany(x => x.PageVersions)
+                .Where(x => x.Published <= DateTime.UtcNow)
+                .OrderByDescending(x => x.Published)
+                .ThenByDescending(x => x.Version)
+                .Take(1)
+                .AsSplitQuery();
         }
-        public static IQueryable<T>? SelectPublishedItems<T>(this IQueryable<T> dbModel) where T : class, ContentDatabase.Model.ICreationDetails
+        public static IQueryable<Guid> SlugGuidByUrl(this IQueryable<ContentDatabase.Model.PageSlug> dbModel, string url)
         {
-            return dbModel.Where(x => x.Published <= DateTime.UtcNow);
+            return dbModel.Where(x => x.Slug == url).Select(x => x.Id);
         }
-        public static IQueryable<ContentDatabase.Model.Page>? SelecPageByUrl(this IQueryable<ContentDatabase.Model.Page> dbModel, string url)
+        public static IQueryable<ContentDatabase.Model.PageVersion> LoadePageVersion(this IQueryable<ContentDatabase.Model.PageVersion> dbModel)
         {
-            return dbModel.Where(x => x.Slug == url);
+            return dbModel
+                .Include(x => x.PageTemplate)
+                    .ThenInclude(x=> x.PageComponents)
+                .Include(x => x.Components)
+                    .ThenInclude(x => x.Assets)
+                .Include(x => x.Components)
+                    .ThenInclude(x=> x.PayLoad)
+                .AsSplitQuery();
         }
-        public static IQueryable<T> SelectLatestVersion<T>(this IQueryable<T> queryable) where T : class, IVersionable
+        public static IQueryable<ContentDatabase.Model.PulishedPageSlug> LoadePageVersion(this IQueryable<ContentDatabase.Model.PulishedPageSlug> dbModel)
         {
-            return queryable
-                .OrderBy(x => x.Version)
-                .Take(1);
+            return dbModel
+                .Include(x => x.PageVersion)
+                    .ThenInclude(x=> x.PageTemplate)
+                        .ThenInclude(x=> x.PageComponents)
+                .Include(x => x.PageVersion)
+                    .ThenInclude(x => x.Components)
+                        .ThenInclude(x=> x.PayLoad)
+                .Include(x=> x.PageVersion)
+                    .ThenInclude(x=> x.Components)
+                        .ThenInclude(x=> x.Assets)
+                .AsSplitQuery();
         }
-
+        public static IQueryable<ContentDatabase.Model.Page> PageBySlugGuid(this IQueryable<ContentDatabase.Model.PulishedPageSlug> dbModel, Guid slugGuid)
+        {
+            return dbModel.Where(x => x.SlugId == slugGuid).Select(x => x.Page);
+        }
     }
 
     public interface IPageOrchestratorService
@@ -113,71 +143,6 @@ namespace CMSProj.DataLayer
         public Task<Page> ScaffoldedPageAsync(string url);
         public Page ConstructedCompletePage(string url);
         public Task<Page> ConstructedCompletePageAsync(string url);
-    }
-
-    public interface IComponentOrchestrator
-    {
-        public ContentComponent 
-    }
-    
-    public class PageOrchestrator : IPageOrchestratorService
-    {
-        ContentDatabase
-        IContentRetrievalService<PageScaffold> ScaffoldRetrieval { get; }
-        IContentRetrievalService<Asset> AssetRetrieval { get; }
-        IContentRetrievalService<Page> PageRetrieval { get; }
-        IContentRetrievalService<ContentComponent> ComponentRetrieval { get; }
-
-        public PageOrchestrator(
-            IContentRetrievalService<PageScaffold> scaffoldService,
-            IContentRetrievalService<Asset> assetService,
-            IContentRetrievalService<Page> pageService,
-            IContentRetrievalService<ContentComponent> componentService)
-        {
-            ScaffoldRetrieval = scaffoldService;
-            AssetRetrieval = assetService;
-            ComponentRetrieval = componentService;
-        }
-
-        public Page ConstructCompletePage(PageScaffold scaffoldedPage)
-        {
-            throw new NotImplementedException();
-        }
-
-        public Task<Page> ConstructCompletePageAsync(PageScaffold scaffoldedPage)
-        {
-            throw new NotImplementedException();
-        }
-
-        public Page ScaffoldPage(Guid guid)
-        {
-            throw new NotImplementedException();
-        }
-
-        public Task<Page> ScaffoldPageAsync(Guid guid)
-        {
-            throw new NotImplementedException();
-        }
-
-        public Page ScaffoldedPage(string url)
-        {
-            c
-        }
-
-        public Task<Page> ScaffoldedPageAsync(string url)
-        {
-            throw new NotImplementedException();
-        }
-
-        public Page ConstructedCompletePage(string url)
-        {
-            throw new NotImplementedException();
-        }
-
-        public Task<Page> ConstructedCompletePageAsync(string url)
-        {
-            throw new NotImplementedException();
-        }
     }
 
     public interface IDatalayerFactory<T, U>
@@ -215,48 +180,7 @@ namespace CMSProj.DataLayer
             throw new NotImplementedException();
         }
     }
-    public class ComponentRetrievalService : IContentRetrievalService<ContentComponent>
-    {
-        public ContentComponent RetrieveComponent(Guid guid)
-        {
-            throw new NotImplementedException();
-        }
 
-        public Task<ContentComponent> RetrieveComponentAsync(Guid guid)
-        {
-            throw new NotImplementedException();
-        }
-
-        public ContentComponent RetrieveContent(Guid guid)
-        {
-            throw new NotImplementedException();
-        }
-
-        public Task<ContentComponent> RetrieveContentAsync(Guid guid)
-        {
-            throw new NotImplementedException();
-        }
-
-        public Task<ICollection<ContentComponent>> RetrieveContentPublishedOnAsync(DateTime dateTime)
-        {
-            throw new NotImplementedException();
-        }
-
-        public ICollection<ContentComponent> RetrievePublishedBy(DateTime dateTime)
-        {
-            throw new NotImplementedException();
-        }
-
-        public Task<ICollection<ContentComponent>> RetrievePublishedByAsync(DateTime dateTime)
-        {
-            throw new NotImplementedException();
-        }
-
-        public ICollection<ContentComponent> RetrievePublishedOnContent(DateTime dateTime)
-        {
-            throw new NotImplementedException();
-        }
-    }
     public class ScaffoldingRetrievalService : IContentRetrievalService<PageScaffold>
     {
         public PageScaffold RetrieveComponent(Guid guid)

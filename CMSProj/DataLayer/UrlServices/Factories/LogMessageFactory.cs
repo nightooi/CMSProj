@@ -1,4 +1,4 @@
-﻿namespace CMSProj.DataLayer.UrlServices
+﻿namespace CMSProj.DataLayer.UrlServices.Factories
 {
     public class LogMessageFactory
     {

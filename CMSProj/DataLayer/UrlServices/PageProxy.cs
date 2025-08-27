@@ -1,10 +1,10 @@
 ﻿namespace CMSProj.DataLayer.UrlServices
 {
     //pageproxy
-    public class PageProxy : ContentDatabase.Model.Page
+    public class SlugProxy : ContentDatabase.Model.PageSlug
     {
         public new Guid Id { get; set; }
-        public PageProxy(Guid id, string slug)
+        public SlugProxy(Guid id, string slug)
         {
             Id = id;
             Slug = slug;

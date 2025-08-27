@@ -21,5 +21,6 @@ namespace ContentDatabase.Model
         public string FileType { get; set; }
         public AssetHostDomain AssetDomain { get; set; } = null!;
         public AssetFileType AssetFileType { get; set; } = null!;
+        public PageVersion Page { get; set; } = null!;
     }
 }

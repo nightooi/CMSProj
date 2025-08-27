@@ -25,5 +25,6 @@ namespace ContentDatabase.Model
         public int? Version { get; set; }
         public PageVersion PageVersion { get; set; } = null!;
         public PageComponent PageComponent { get; set; } = null!;
+        public ICollection<Assets> Assets { get; set; } = new List<Assets>();
     }
 }

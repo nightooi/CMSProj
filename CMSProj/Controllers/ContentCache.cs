@@ -1,3 +1,5 @@
+using CMSProj.SubSystems.RouteResolvers;
+
 namespace CMSProj.Controllers
 {
     public class ContentCache(IWebHostEnvironment env, IRouteRepository routeRepository) : IContentCache
@@ -78,9 +80,9 @@ namespace CMSProj.Controllers
             return this;
         }
 
-        public async Task<IContentCache> InitializeAsync()
+        public async Task<IContentCache> InitializeAsync(CancellationToken token)
         {
-            var routes = _routeRepository.GetAvailableRoutes();
+            var routes = _routeRepository.GetAvailableRoutesAsync(token);
             foreach(var guid in routes)
             {
                 await AddAsync(guid);

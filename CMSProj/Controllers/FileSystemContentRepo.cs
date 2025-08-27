@@ -8,8 +8,20 @@ namespace CMSProj.Controllers
 
         public async Task<IEnumerable<string>> GetPageConentAsync(Guid guid)
         {
-            await InitializeAsync();
-            return _contentCache.GetFullPage(guid);
+            var tsx = new CancellationTokenSource();
+            try
+            {
+                await InitializeAsync(tsx.Token);
+                return _contentCache.GetFullPage(guid);
+            }
+            catch(Exception exc)
+            {
+                tsx.Cancel();
+            }
+            finally
+            {
+                tsx.Dispose();
+            }
         }
 
         /// <summary>
@@ -32,10 +44,10 @@ namespace CMSProj.Controllers
             return this;
         }
 
-        public async Task<IContentRepository> InitializeAsync()
+        public async Task<IContentRepository> InitializeAsync(CancellationToken token)
         {
             if(contentCache is null || contentCache.Cache.Count < 1)
-                await _contentCache.InitializeAsync();
+                await _contentCache.InitializeAsync(token);
             return this;
         }
     }

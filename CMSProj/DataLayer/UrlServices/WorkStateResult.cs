@@ -1,4 +1,6 @@
-﻿namespace CMSProj.DataLayer.UrlServices
+﻿using CMSProj.DataLayer.UrlServices.Factories;
+
+namespace CMSProj.DataLayer.UrlServices
 {
     //Singleton, Its state is managed by the BackgroundService, appears stateless down the dependency tree
     public abstract class WorkStateResult<T> : IWorkResultOrchestrator<WorkerResult<T>>

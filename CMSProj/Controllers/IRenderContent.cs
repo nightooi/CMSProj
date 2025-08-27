@@ -7,8 +7,11 @@ namespace CMSProj.Controllers
        IEnumerable<string> Content { get; set; }
        IEnumerable<string> InjectHeaders();
        IEnumerable<string> InjectCss();
-       IEnumerable<string> InjectBody();
+       IEnumerable<string> InjectScaffolding();
+       IEnumerable<IEnumerable<string>> InjectComponents();
+       IEnumerable<IEnumerable<string>> InjectComponentContents();
        IEnumerable<string> InjectScripts();
+       IEnumerable<string> InjectEndUserPlugins();
        IEnumerable<string> InjectPluginsHeaders(bool isAuth);
        IEnumerable<string> InjectPluginsContent(bool isAuth);
        IEnumerable<string> InjectHeaderPluginsJs(bool isAuth);

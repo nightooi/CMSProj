@@ -7,7 +7,7 @@
         //Last time of generation to the FileSystem(ready for to Serve)
         public DateTime? Generated { get; set; }
         //Time of Publishing(First time Live)
-        public Guid RevisionAuthorId { get; set; }
+        public Guid CreationAuthorId { get; set; }
         public DateTime Published { get; set; }
         public Guid? AuthorId { get; set; }
         public string? CopyRight { get; set; }

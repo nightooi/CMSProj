@@ -1,5 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 
+using System.ComponentModel;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace ContentDatabase.Model
@@ -10,7 +12,8 @@ namespace ContentDatabase.Model
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public Guid Id { get; }
         public int Version { get; set; }
-        public ICollection<PageComponent> PageComponents { get; set; } = new List<PageComponent>();
-        public ICollection<Page> Pages { get; set; } = new List<Page>();
+        public ICollection<PageComponent> PageComponents { get; set; } = [];
+        public ICollection<Page> Pages { get; set; } = [];
+        public ICollection<PageVersion> PageVersions = [];
     }
 }

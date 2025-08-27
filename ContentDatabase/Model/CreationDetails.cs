@@ -7,7 +7,7 @@ namespace ContentDatabase.Model
         public DateTime Constructed { get; set; }
         public DateTime? Generated { get; set; }
         [ForeignKey(nameof(CreationAuthor.Id))]
-        public Guid RevisionAuthorId { get; set; }
+        public Guid CreationAuthorId { get; set; }
         public DateTime Published { get; set; }
         public Guid? AuthorId { get; set; }
         public string? CopyRight { get; set; }

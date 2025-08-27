@@ -9,9 +9,14 @@ namespace ContentDatabase.Model
         /// <summary>
         ///     Json Dump
         ///     
-        /// SERIALIZATION AND DESERIALIZATION ARE PROVIDED.
+        /// serialization and deserialization types are provided. under clrtypes
         /// </summary>
         public string Markup { get; set; }
+        /// <summary>
+        /// do no for the life of me insert html, js or css here, this is direct enduser visible content of the markup.
+        /// this will be searched during search queries from the enduser.
+        /// 
+        /// </summary>
         public string Content { get; set; }
         public ICollection<AuthoredComponent> Pages { get; set; } = null!;
     }

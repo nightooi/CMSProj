@@ -9,12 +9,13 @@ namespace ContentDatabase.Model
     public class Page : CreationDetails, Id
     {
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+        [Key]
         public Guid Id { get; }
-        [MaxLength(2000)]
-        public string Slug { get; set; }
-        [MaxLength(200)]
-        [Key] public string PageName { get; set; }
-        public PageTemplate PageTemplate { get; set; }
+        [ForeignKey(nameof(PageSlug.Id))]
+        public Guid SlugId { get; set; }
+        public PageSlug Slug { get; set; }
+        [MaxLength(1000)]
+        public string PageName { get; set; }
         public ICollection<PageVersion>? PageVersions { get; set; } = new List<PageVersion>();
     }
 }

@@ -1,4 +1,4 @@
-namespace CMSProj.Controllers
+namespace CMSProj.SubSystems.RouteResolvers
 {
     public static class FindPageByGuidWebroot
     {

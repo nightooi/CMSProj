@@ -29,7 +29,6 @@ namespace CMSProj
             if (await db.Authors.AnyAsync(ct)) return;
 
             var now = DateTime.UtcNow;
-
             var systemAuthor = new Author
             {
                 Name = "System",
@@ -51,6 +50,8 @@ namespace CMSProj
             db.AssetHostDomains.AddRange(cdn, site);
             await db.SaveChangesAsync(ct);
 
+            var Slugs = new PageSlug() { Slug = "/Home" };
+
             var cssAsset = new Assets
             {
                 Url = "https://cdn.example.com/styles/base.css",
@@ -68,7 +69,7 @@ namespace CMSProj
                 CreationAuthor = systemAuthor,
                 LastRevisionTime = now,
                 RevisionDiff = null,
-                RevisionAuthorId = systemAuthor.Id,
+                CreationAuthorId = systemAuthor.Id,
                 RevisionAuthor = new List<Author> { systemAuthor }
             };
 
@@ -89,7 +90,7 @@ namespace CMSProj
                 CreationAuthor = systemAuthor,
                 LastRevisionTime = now,
                 RevisionDiff = null,
-                RevisionAuthorId = systemAuthor.Id,
+                CreationAuthorId = systemAuthor.Id,
                 RevisionAuthor = new List<Author> { systemAuthor }
             };
 
@@ -97,8 +98,8 @@ namespace CMSProj
 
             var header = new PageComponent
             {
-                ComponentPosition = "<header><h1></h1></header>",
-                ChildOffset = 9,
+                ComponentHtml = "<header><h1></h1></header>",
+                ChildOffset = 11,
                 SelfPageOrder = 0,
                 Constructed = now,
                 Generated = now,
@@ -109,14 +110,14 @@ namespace CMSProj
                 CreationAuthor = systemAuthor,
                 LastRevisionTime = now,
                 RevisionDiff = null,
-                RevisionAuthorId = systemAuthor.Id,
+                CreationAuthorId = systemAuthor.Id,
                 RevisionAuthor = new List<Author> { systemAuthor }
             };
 
             var main = new PageComponent
             {
-                ComponentPosition = "<main><section></section></main>",
-                ChildOffset = 6,
+                ComponentHtml = "<main><section></section></main>",
+                ChildOffset = 14,
                 SelfPageOrder = 1,
                 Constructed = now,
                 Generated = now,
@@ -127,14 +128,14 @@ namespace CMSProj
                 CreationAuthor = systemAuthor,
                 LastRevisionTime = now,
                 RevisionDiff = null,
-                RevisionAuthorId = systemAuthor.Id,
+                CreationAuthorId = systemAuthor.Id,
                 RevisionAuthor = new List<Author> { systemAuthor }
             };
 
             var footer = new PageComponent
             {
-                ComponentPosition = "<footer><small></small></footer>",
-                ChildOffset = 9,
+                ComponentHtml = "<footer><small></small></footer>",
+                ChildOffset = 14,
                 SelfPageOrder = 2,
                 Constructed = now,
                 Generated = now,
@@ -145,7 +146,7 @@ namespace CMSProj
                 CreationAuthor = systemAuthor,
                 LastRevisionTime = now,
                 RevisionDiff = null,
-                RevisionAuthorId = systemAuthor.Id,
+                CreationAuthorId = systemAuthor.Id,
                 RevisionAuthor = new List<Author> { systemAuthor }
             };
 
@@ -166,7 +167,7 @@ namespace CMSProj
                 CreationAuthor = systemAuthor,
                 LastRevisionTime = now,
                 RevisionDiff = null,
-                RevisionAuthorId = systemAuthor.Id,
+                CreationAuthorId = systemAuthor.Id,
                 RevisionAuthor = new List<Author> { systemAuthor }
             };
             db.PageTemplates.Add(baseTemplate);
@@ -174,9 +175,8 @@ namespace CMSProj
 
             var homePage = new Page
             {
-                Slug = "/",
+                Slug = Slugs,
                 PageName = "Home",
-                PageTemplate = baseTemplate,
                 PageVersions = new List<PageVersion>(),
                 Constructed = now,
                 Generated = now,
@@ -187,7 +187,7 @@ namespace CMSProj
                 CreationAuthor = systemAuthor,
                 LastRevisionTime = now,
                 RevisionDiff = null,
-                RevisionAuthorId = systemAuthor.Id,
+                CreationAuthorId = systemAuthor.Id,
                 RevisionAuthor = new List<Author> { systemAuthor }
             };
             db.Pages.Add(homePage);
@@ -207,7 +207,7 @@ namespace CMSProj
                 CreationAuthor = systemAuthor,
                 LastRevisionTime = now,
                 RevisionDiff = null,
-                RevisionAuthorId = systemAuthor.Id,
+                CreationAuthorId = systemAuthor.Id,
                 RevisionAuthor = new List<Author> { systemAuthor }
             };
             db.PageVersions.Add(v1);
@@ -243,7 +243,7 @@ namespace CMSProj
                 CreationAuthor = systemAuthor,
                 LastRevisionTime = now,
                 RevisionDiff = null,
-                RevisionAuthorId = systemAuthor.Id,
+                CreationAuthorId = systemAuthor.Id,
                 RevisionAuthor = new List<Author> { systemAuthor }
             };
             db.ComponentMarkups.Add(headerPayload);
@@ -269,7 +269,7 @@ namespace CMSProj
                 CreationAuthor = systemAuthor,
                 LastRevisionTime = now,
                 RevisionDiff = null,
-                RevisionAuthorId = systemAuthor.Id,
+                CreationAuthorId = systemAuthor.Id,
                 RevisionAuthor = new List<Author> { systemAuthor }
             };
 
@@ -301,7 +301,7 @@ namespace CMSProj
                 CreationAuthor = systemAuthor,
                 LastRevisionTime = now,
                 RevisionDiff = null,
-                RevisionAuthorId = systemAuthor.Id,
+                CreationAuthorId = systemAuthor.Id,
                 RevisionAuthor = new List<Author> { systemAuthor }
             };
             db.ComponentMarkups.Add(mainPayload);
@@ -327,7 +327,7 @@ namespace CMSProj
                 CreationAuthor = systemAuthor,
                 LastRevisionTime = now,
                 RevisionDiff = null,
-                RevisionAuthorId = systemAuthor.Id,
+                CreationAuthorId = systemAuthor.Id,
                 RevisionAuthor = new List<Author> { systemAuthor }
             };
 

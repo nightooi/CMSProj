@@ -43,6 +43,8 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Folder Include="DataLayer\DatalayerExtensions\" />
+    <Folder Include="DataLayer\Registration\" />
     <Folder Include="DIExtensions\" />
     <Folder Include="wwwroot\46c4f891-9764-447d-8f85-d79cc78c8513\css\" />
     <Folder Include="wwwroot\46c4f891-9764-447d-8f85-d79cc78c8513\js\" />
