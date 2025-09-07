@@ -24,7 +24,9 @@ namespace ContentDatabase
         public DbSet<ComponentMarkup> ComponentMarkups { get; set; }
         public DbSet<PageComponent> PageComponents { get; set; }
         public DbSet<PageSlug> PageSlugs { get; set; }
-        public DbSet<PulishedPageSlug> PublishedPages { get; set; }
+        public DbSet<PublishedPageSlug> PublishedPages { get; set; }
+        public DbSet<AssetPageComponent> AssetComponentJoinTable { get; set; }
+        public DbSet<AuthoredAssetJoin> AssetAuthoredJoinTable { get; set; }
         public ContentContext(DbContextOptions<ContentContext> opts) : base(opts)
         {
 
@@ -32,6 +34,81 @@ namespace ContentDatabase
         public ContentContext() : base()
         {
 
+        }
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            base.OnModelCreating(modelBuilder);
+
+            modelBuilder.Entity<PageComponent>()
+                .HasOne(x => x.PageTemplate)
+                .WithMany(x => x.PageComponents)
+                .OnDelete(DeleteBehavior.Restrict)
+                .IsRequired(false);
+
+            modelBuilder.Entity<PageVersion>()
+                .HasOne(x => x.PageTemplate)
+                .WithMany(x => x.PageVersions)
+                .HasForeignKey(x => x.PageTemplateId)
+                .OnDelete(DeleteBehavior.Restrict)
+                .IsRequired(false);
+
+            modelBuilder.Entity<PageVersion>()
+                .HasOne(x => x.Page)
+                .WithMany(x => x.PageVersions)
+                .OnDelete(DeleteBehavior.Restrict)
+                .IsRequired(true);
+
+            modelBuilder.Entity<PageComponent>()
+                .HasMany(x => x.Assets)
+                .WithMany(x => x.Components)
+                .UsingEntity<AssetPageComponent>(
+                x => x.HasOne<Assets>(x => x.Asset).WithMany().HasPrincipalKey(x => x.Id).OnDelete(DeleteBehavior.Cascade).IsRequired(false),
+                y => y.HasOne<PageComponent>(x => x.Component).WithMany().HasPrincipalKey(x => x.Id).OnDelete(DeleteBehavior.NoAction).IsRequired(false));
+
+            modelBuilder.Entity<AuthoredComponent>()
+                .HasOne(x => x.PayLoad)
+                .WithMany(x => x.Pages)
+                .IsRequired(false)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            modelBuilder.Entity<AuthoredComponent>()
+                .HasOne(x => x.PageComponent)
+                .WithMany(x => x.AuthoredComponent)
+                .IsRequired(false)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            modelBuilder.Entity<AuthoredComponent>()
+                .HasOne(x => x.PageVersion)
+                .WithMany(x => x.Components)
+                .IsRequired(true)
+                .OnDelete(DeleteBehavior.ClientCascade);
+
+            modelBuilder.Entity<PublishedPageSlug>()
+                .HasOne(x => x.Page)
+                .WithOne()
+                .IsRequired(true)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<PublishedPageSlug>()
+                .HasOne(x => x.PageVersion)
+                .WithOne()
+                .IsRequired(true)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<PublishedPageSlug>()
+                .HasOne(x => x.Slug)
+                .WithOne()
+                .IsRequired(true)
+                .OnDelete(DeleteBehavior.Restrict)
+                .HasPrincipalKey<PageSlug>(x=> x.Id);
+
+            modelBuilder.Entity<AuthoredComponent>()
+                .HasMany(x => x.Assets)
+                .WithMany(x => x.Page)
+                .UsingEntity<AuthoredAssetJoin>(
+                x=> x.HasOne<Assets>().WithMany().IsRequired(false).OnDelete(DeleteBehavior.Cascade),
+                y => y.HasOne<AuthoredComponent>().WithMany().IsRequired(false).OnDelete(DeleteBehavior.NoAction),
+                z => z.HasAlternateKey(x=> x.Asset));
         }
     }
 }

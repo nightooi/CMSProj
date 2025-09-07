@@ -1,12 +1,14 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using Microsoft.EntityFrameworkCore;
+
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace ContentDatabase.Model
 {
-    public class PulishedPageSlug
+    [PrimaryKey(nameof(SlugId))]
+    public class PublishedPageSlug
     {
         [ForeignKey(nameof(Slug.Id))]
-        [Key]
         [Required]public Guid SlugId { get; set; }
         public PageSlug Slug { get; set; } = null!;
         [ForeignKey(nameof(Page.Id))]

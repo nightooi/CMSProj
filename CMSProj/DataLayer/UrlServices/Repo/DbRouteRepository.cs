@@ -1,4 +1,5 @@
 using CMSProj.DataLayer.UrlServices;
+using CMSProj.SubSystems.BackGroundServices.UrlUpdate;
 
 using System.Text.RegularExpressions;
 /// <summary>
@@ -21,6 +22,7 @@ public class DbRouteRepository : IRouteRepository, IPostActivator<IRouteReposito
     ILogger<DbRouteRepository> Logger { get; set; }
 
     public DbRouteRepository(
+        IRouteMatcherFactory routeMatcher,
         IUrlRetrievalService urlRetrievalService,
         IUpdateWorkResult<WorkerResult<int>> updateResult,
         ILogger<DbRouteRepository> logger)
@@ -28,6 +30,8 @@ public class DbRouteRepository : IRouteRepository, IPostActivator<IRouteReposito
         UrlRetrievalService = urlRetrievalService;
         ResultOrchestrator = updateResult;
         Logger = logger;
+        _routes = new();
+        routeMatcherFactory = routeMatcher;
     }
     public void GetAvailableRoutes()
     {
@@ -75,13 +79,13 @@ public class DbRouteRepository : IRouteRepository, IPostActivator<IRouteReposito
         var definedUrl = MatchRoute(route);
         Guid guid;
         if (!_routes.TryGetValue(definedUrl, out guid))
-            return _routes["NotFound/Index"];
+            return _routes["/NotFound"];
         return guid;
     }
     private string MatchRoute(string? route)
     {
         if (route is null || route == string.Empty)
-            return "Home/Index";
+            return "/Home";
 
         Regex regex = routeMatcherFactory
             .Create(route);
@@ -92,11 +96,19 @@ public class DbRouteRepository : IRouteRepository, IPostActivator<IRouteReposito
             if (regex.IsMatch(defined))
                 return defined;
         }
-        return "NotFound/Index";
+        return "/NotFound";
     }
-    public async Task<Guid?> GetPageGuidAsync(string? route)
+    public async Task<Guid?> GetPageGuidAsync(string? route, CancellationToken token)
     {
+        if (_routes.Keys.Count < 1)
+        {
+            await InitializeAsync(token);
+            return GetPageGuid(route);
+        }
+
+        if(_currentUpdate is not null)
         await _currentUpdate;
+
         return GetPageGuid(route);
     }
 

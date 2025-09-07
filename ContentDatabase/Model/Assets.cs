@@ -21,6 +21,14 @@ namespace ContentDatabase.Model
         public string FileType { get; set; }
         public AssetHostDomain AssetDomain { get; set; } = null!;
         public AssetFileType AssetFileType { get; set; } = null!;
-        public PageVersion Page { get; set; } = null!;
+        public virtual ICollection<AuthoredComponent>? Page { get; set; } = null!;
+        public virtual ICollection<PageComponent>? Components { get; set; } = null!;
+    }
+    public class AssetPageComponent
+    {
+        public Guid AssetId { get; set; }
+        public Guid ComponentId { get; set; }
+        public Assets Asset { get; set; }
+        public PageComponent Component {get;set;}
     }
 }

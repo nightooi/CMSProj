@@ -1,6 +1,6 @@
 public interface IRouteRepository : IPostActivator<IRouteRepository>
 {
-    public Task<Guid?> GetPageGuidAsync(string? route);
+    public Task<Guid?> GetPageGuidAsync(string? route, CancellationToken token);
     public Guid? GetPageGuid(string? route);
 
     //There should be a way to redo this with options pattern

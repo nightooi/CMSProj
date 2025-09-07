@@ -1,4 +1,6 @@
-﻿namespace CMSProj.DataLayer.UrlServices.Factories
+﻿using CMSProj.SubSystems.BackGroundServices.UrlUpdate;
+
+namespace CMSProj.DataLayer.UrlServices.Factories
 {
     public class WorkerResultFactory<T>
     {

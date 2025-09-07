@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Primitives;
 using Microsoft.Identity.Client;
 
 using System.Text.RegularExpressions;
@@ -8,6 +9,7 @@ public class RouteRepository : IRouteRepository, IPostActivator<IRouteRepository
     IRouteMatcherFactory routeMatcherFactory;
     IReadOnlyDictionary<string, Guid> Routes => _routes;
     IReadOnlyCollection<string> ExistingRoutes => _routes.Keys;
+
     IWebHostEnvironment _env;
     public RouteRepository(IWebHostEnvironment env, IRouteMatcherFactory routeMatcher)
     {
@@ -52,7 +54,7 @@ public class RouteRepository : IRouteRepository, IPostActivator<IRouteRepository
         }
         return "NotFound/Index";
     }
-    public async Task<Guid?> GetPageGuidAsync(string? route)
+    public async Task<Guid?> GetPageGuidAsync(string? route, CancellationToken token)
     {
         var guid = GetPageGuid(route);
         if (guid is not null)

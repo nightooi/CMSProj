@@ -1,6 +1,6 @@
 ﻿using CMSProj.DataLayer.UrlServices.Factories;
 
-namespace CMSProj.DataLayer.UrlServices
+namespace CMSProj.SubSystems.BackGroundServices.UrlUpdate
 {
     public class RouteManagerWorkerState : WorkStateResult<int>
     {
@@ -16,6 +16,7 @@ namespace CMSProj.DataLayer.UrlServices
             _resultFactory = resultFactory;
             _currentState = WorkerState.Initiated;
             _stageStamps = new();
+            _stageStamps.Add(DateTime.UtcNow);
         }
 
         public override void Log()
@@ -52,6 +53,7 @@ namespace CMSProj.DataLayer.UrlServices
         {
             Exception exc;
             var message = _messageFactory.Create();
+            _stageStamps.Add(DateTime.UtcNow);
             message.Message = $"\nWork {WorkerResult.JobId} Failed: {DateTime.UtcNow}." +
                 $"\tStageFailure: {state}.\nException: {(RunningTask.Exception ?? new Exception()).Message}";
             message.LogLevel = level;
@@ -66,7 +68,8 @@ namespace CMSProj.DataLayer.UrlServices
         void UpdateOnContinuation(string subService, WorkerState state, LogLevel level)
         {
             var message = _messageFactory.Create();
-            var continuationMessage = $"-- Finnished: {DateTime.UtcNow}\n {state}\t" +
+            _stageStamps.Add(DateTime.UtcNow);
+            var continuationMessage = $"-- Finnished: {DateTime.UtcNow} {state}\t" +
                 $" Duration{_stageStamps.Last() - _stageStamps[_stageStamps.Count-2]} Started: {DateTime.UtcNow}";
 
             message.Message = continuationMessage;
@@ -79,6 +82,7 @@ namespace CMSProj.DataLayer.UrlServices
         void UpdateOnFinish(string subService, LogLevel level)
         {
             var message = _messageFactory.Create();
+            _stageStamps.Add(DateTime.UtcNow);
             var FinishMessage = $"Work: {WorkerResult.JobId} Finnshed Successfully: {DateTime.UtcNow}";
             WorkerResult.Status += $"-- Finnished: {DateTime.UtcNow}\n Op Ended with Total Time: {_stageStamps.Last() - _stageStamps.First()}";
             message.Message = FinishMessage;
@@ -94,6 +98,7 @@ namespace CMSProj.DataLayer.UrlServices
 
         public override WorkerResult<int> InitializeWork()
         {
+            _stageStamps.Add(DateTime.UtcNow);
             return WorkerResult = _resultFactory.Create(Guid.NewGuid());
         }
         /// <summary>

@@ -1,42 +1,25 @@
+using CMSProj.DataLayer;
+
 namespace CMSProj.Controllers
 {
     public class RenderContent : IRenderContent
     {
-        public IEnumerable<string> Content { get; set; }
+        private Dictionary<ComponentKeys, ICollection<string>> _content = new();
+        public IDictionary<ComponentKeys, ICollection<string>> Content => _content;
 
-        public IEnumerable<string> InjectBody()
+        public string InjectBody()
         {
-            return Content;
+            return _content[ComponentKeys.CompletePage].Aggregate((x, y) => x += y);
         }
 
-        public IEnumerable<string> InjectCss()
+        public string InjectHeaders()
         {
-            throw new NotImplementedException();
+            return _content[ComponentKeys.Header].Aggregate((x, y) => x += y);
         }
 
-        public IEnumerable<string> InjectHeaderPluginsJs(bool isAuth)
+        public string InjectScripts()
         {
-            throw new NotImplementedException();
-        }
-
-        public IEnumerable<string> InjectHeaders()
-        {
-            throw new NotImplementedException();
-        }
-
-        public IEnumerable<string> InjectPluginsContent(bool isAuth)
-        {
-            throw new NotImplementedException();
-        }
-
-        public IEnumerable<string> InjectPluginsHeaders(bool isAuth)
-        {
-            throw new NotImplementedException();
-        }
-
-        public IEnumerable<string> InjectScripts()
-        {
-            throw new NotImplementedException();
+            return _content[ComponentKeys.Js].Aggregate((x, y) => x += y);
         }
     }
 }

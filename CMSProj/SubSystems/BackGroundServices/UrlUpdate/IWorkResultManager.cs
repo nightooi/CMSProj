@@ -1,4 +1,4 @@
-﻿namespace CMSProj.DataLayer.UrlServices
+﻿namespace CMSProj.SubSystems.BackGroundServices.UrlUpdate
 {
     public interface IWorkResultManager<T> : IDisposable
     {

@@ -12,8 +12,7 @@ namespace ContentDatabase.Model
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public Guid Id { get; }
         public int Version { get; set; }
-        public ICollection<PageComponent> PageComponents { get; set; } = [];
-        public ICollection<Page> Pages { get; set; } = [];
-        public ICollection<PageVersion> PageVersions = [];
+        public ICollection<PageComponent>? PageComponents { get; set; } = [];
+        public virtual ICollection<PageVersion>? PageVersions { get; set; } = null!;
     }
 }

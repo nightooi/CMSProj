@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace ContentDatabase.Migrations
 {
     [DbContext(typeof(ContentContext))]
-    [Migration("20250820160501_Init")]
-    partial class Init
+    [Migration("20250905124845_Templates")]
+    partial class Templates
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -27,11 +27,9 @@ namespace ContentDatabase.Migrations
 
             modelBuilder.Entity("ContentDatabase.Model.AssetFileType", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("FileType")
                         .IsRequired()
@@ -65,20 +63,36 @@ namespace ContentDatabase.Migrations
                     b.ToTable("AssetHostDomains");
                 });
 
+            modelBuilder.Entity("ContentDatabase.Model.AssetPageComponent", b =>
+                {
+                    b.Property<Guid>("AssetId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("ComponentId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("AssetId", "ComponentId");
+
+                    b.HasIndex("ComponentId");
+
+                    b.ToTable("AssetComponentJoinTable");
+                });
+
             modelBuilder.Entity("ContentDatabase.Model.Assets", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<string>("AssetDescription")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<Guid>("AssetDomainId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<Guid>("AssetFileTypeId")
                         .HasColumnType("uniqueidentifier");
-
-                    b.Property<int>("AssetFileTypeId1")
-                        .HasColumnType("int");
 
                     b.Property<string>("AssetName")
                         .IsRequired()
@@ -96,6 +110,9 @@ namespace ContentDatabase.Migrations
                     b.Property<string>("CopyRightDisclaimer")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<Guid>("CreationAuthorId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<string>("FileType")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -109,9 +126,6 @@ namespace ContentDatabase.Migrations
                     b.Property<DateTime>("Published")
                         .HasColumnType("datetime2");
 
-                    b.Property<Guid>("RevisionAuthorId")
-                        .HasColumnType("uniqueidentifier");
-
                     b.Property<string>("RevisionDiff")
                         .HasColumnType("nvarchar(max)");
 
@@ -124,9 +138,9 @@ namespace ContentDatabase.Migrations
 
                     b.HasIndex("AssetDomainId");
 
-                    b.HasIndex("AssetFileTypeId1");
+                    b.HasIndex("AssetFileTypeId");
 
-                    b.HasIndex("AuthorId");
+                    b.HasIndex("CreationAuthorId");
 
                     b.HasIndex("Url")
                         .IsUnique();
@@ -154,6 +168,39 @@ namespace ContentDatabase.Migrations
                     b.ToTable("Authors");
                 });
 
+            modelBuilder.Entity("ContentDatabase.Model.AuthoredAssetJoin", b =>
+                {
+                    b.Property<Guid>("AssetsId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("PageId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("Asset")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("AuthoredComp")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("CompAssetId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("CompId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("AssetsId", "PageId");
+
+                    b.HasAlternateKey("Asset");
+
+                    b.HasIndex("CompAssetId");
+
+                    b.HasIndex("CompId");
+
+                    b.HasIndex("PageId");
+
+                    b.ToTable("AssetAuthoredJoinTable");
+                });
+
             modelBuilder.Entity("ContentDatabase.Model.AuthoredComponent", b =>
                 {
                     b.Property<Guid>("Id")
@@ -177,20 +224,26 @@ namespace ContentDatabase.Migrations
                     b.Property<string>("CopyRightDisclaimer")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("CssUrl")
+                    b.Property<Guid>("CreationAuthorId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("CssHeaderTags")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime?>("Generated")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("HeaderJsUrl")
+                    b.Property<string>("JsBodyTags")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("JsUrl")
+                    b.Property<string>("JsHeaderTags")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime>("LastRevisionTime")
                         .HasColumnType("datetime2");
+
+                    b.Property<string>("OtherHeaders")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<Guid>("PageComponentId")
                         .HasColumnType("uniqueidentifier");
@@ -198,15 +251,11 @@ namespace ContentDatabase.Migrations
                     b.Property<Guid>("PageVersionId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<string>("PayLoad")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<Guid>("PayLoadId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime>("Published")
                         .HasColumnType("datetime2");
-
-                    b.Property<Guid>("RevisionAuthorId")
-                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("RevisionDiff")
                         .HasColumnType("nvarchar(max)");
@@ -215,18 +264,65 @@ namespace ContentDatabase.Migrations
                         .ValueGeneratedOnAddOrUpdate()
                         .HasColumnType("int");
 
-                    b.Property<Guid>("VersionId")
-                        .HasColumnType("uniqueidentifier");
-
                     b.HasKey("Id");
 
-                    b.HasIndex("AuthorId");
+                    b.HasIndex("CreationAuthorId");
 
                     b.HasIndex("PageComponentId");
 
                     b.HasIndex("PageVersionId");
 
-                    b.ToTable("AuothoredComponents");
+                    b.HasIndex("PayLoadId");
+
+                    b.ToTable("AuthoredComponents");
+                });
+
+            modelBuilder.Entity("ContentDatabase.Model.ComponentMarkup", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("AuthorId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("Constructed")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Content")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("CopyRight")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("CopyRightDisclaimer")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<Guid>("CreationAuthorId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("Generated")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("LastRevisionTime")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Markup")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("Published")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("RevisionDiff")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreationAuthorId");
+
+                    b.ToTable("ComponentMarkups");
                 });
 
             modelBuilder.Entity("ContentDatabase.Model.Page", b =>
@@ -247,6 +343,9 @@ namespace ContentDatabase.Migrations
                     b.Property<string>("CopyRightDisclaimer")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<Guid>("CreationAuthorId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<DateTime?>("Generated")
                         .HasColumnType("datetime2");
 
@@ -255,31 +354,23 @@ namespace ContentDatabase.Migrations
 
                     b.Property<string>("PageName")
                         .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("nvarchar(200)");
-
-                    b.Property<Guid>("PageTemplateId")
-                        .HasColumnType("uniqueidentifier");
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
 
                     b.Property<DateTime>("Published")
                         .HasColumnType("datetime2");
 
-                    b.Property<Guid>("RevisionAuthorId")
-                        .HasColumnType("uniqueidentifier");
-
                     b.Property<string>("RevisionDiff")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("Slug")
-                        .IsRequired()
-                        .HasMaxLength(2000)
-                        .HasColumnType("nvarchar(2000)");
+                    b.Property<Guid>("SlugId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("AuthorId");
+                    b.HasIndex("CreationAuthorId");
 
-                    b.HasIndex("PageTemplateId");
+                    b.HasIndex("SlugId");
 
                     b.ToTable("Pages");
                 });
@@ -293,10 +384,13 @@ namespace ContentDatabase.Migrations
                     b.Property<Guid?>("AuthorId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<string>("ComponentPosition")
+                    b.Property<int>("ChildOffset")
+                        .HasColumnType("int");
+
+                    b.Property<string>("ComponentHtml")
                         .IsRequired()
-                        .HasMaxLength(300)
-                        .HasColumnType("nvarchar(300)");
+                        .HasMaxLength(3000)
+                        .HasColumnType("nvarchar(3000)");
 
                     b.Property<DateTime>("Constructed")
                         .HasColumnType("datetime2");
@@ -307,26 +401,67 @@ namespace ContentDatabase.Migrations
                     b.Property<string>("CopyRightDisclaimer")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<Guid>("CreationAuthorId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("CssHeaderTags")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<DateTime?>("Generated")
                         .HasColumnType("datetime2");
+
+                    b.Property<string>("JsBodyTags")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("JsHeaderTags")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime>("LastRevisionTime")
                         .HasColumnType("datetime2");
 
+                    b.Property<string>("OtherHeaders")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<Guid>("PageTemplateId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<DateTime>("Published")
                         .HasColumnType("datetime2");
-
-                    b.Property<Guid>("RevisionAuthorId")
-                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("RevisionDiff")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<int>("SelfPageOrder")
+                        .HasColumnType("int");
+
                     b.HasKey("Id");
 
-                    b.HasIndex("AuthorId");
+                    b.HasIndex("CreationAuthorId");
 
-                    b.ToTable("PageComponent");
+                    b.HasIndex("PageTemplateId");
+
+                    b.ToTable("PageComponents");
+                });
+
+            modelBuilder.Entity("ContentDatabase.Model.PageSlug", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("PageslugSlugId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Slug")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PageslugSlugId");
+
+                    b.ToTable("PageSlugs");
                 });
 
             modelBuilder.Entity("ContentDatabase.Model.PageTemplate", b =>
@@ -347,6 +482,9 @@ namespace ContentDatabase.Migrations
                     b.Property<string>("CopyRightDisclaimer")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<Guid>("CreationAuthorId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<DateTime?>("Generated")
                         .HasColumnType("datetime2");
 
@@ -356,9 +494,6 @@ namespace ContentDatabase.Migrations
                     b.Property<DateTime>("Published")
                         .HasColumnType("datetime2");
 
-                    b.Property<Guid>("RevisionAuthorId")
-                        .HasColumnType("uniqueidentifier");
-
                     b.Property<string>("RevisionDiff")
                         .HasColumnType("nvarchar(max)");
 
@@ -367,7 +502,7 @@ namespace ContentDatabase.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("AuthorId");
+                    b.HasIndex("CreationAuthorId");
 
                     b.ToTable("PageTemplates");
                 });
@@ -390,6 +525,9 @@ namespace ContentDatabase.Migrations
                     b.Property<string>("CopyRightDisclaimer")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<Guid>("CreationAuthorId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<DateTime?>("Generated")
                         .HasColumnType("datetime2");
 
@@ -399,40 +537,69 @@ namespace ContentDatabase.Migrations
                     b.Property<Guid>("PageId")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<Guid>("PageTemplateId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<DateTime>("Published")
                         .HasColumnType("datetime2");
-
-                    b.Property<Guid>("RevisionAuthorId")
-                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("RevisionDiff")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("VersionNumber")
+                    b.Property<int>("Version")
                         .HasColumnType("int");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("AuthorId");
+                    b.HasIndex("CreationAuthorId");
 
                     b.HasIndex("PageId");
+
+                    b.HasIndex("PageTemplateId");
 
                     b.ToTable("PageVersions");
                 });
 
-            modelBuilder.Entity("PageComponentPageTemplate", b =>
+            modelBuilder.Entity("ContentDatabase.Model.PublishedPageSlug", b =>
                 {
-                    b.Property<Guid>("PageComponentsId")
+                    b.Property<Guid>("SlugId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid>("PageTemplateId")
+                    b.Property<Guid>("PageId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.HasKey("PageComponentsId", "PageTemplateId");
+                    b.Property<Guid>("PageVersionId")
+                        .HasColumnType("uniqueidentifier");
 
-                    b.HasIndex("PageTemplateId");
+                    b.Property<DateTime>("PublishedAt")
+                        .HasColumnType("datetime2");
 
-                    b.ToTable("PageComponentPageTemplate");
+                    b.HasKey("SlugId");
+
+                    b.HasIndex("PageId")
+                        .IsUnique();
+
+                    b.HasIndex("PageVersionId")
+                        .IsUnique();
+
+                    b.ToTable("PublishedPages");
+                });
+
+            modelBuilder.Entity("ContentDatabase.Model.AssetPageComponent", b =>
+                {
+                    b.HasOne("ContentDatabase.Model.Assets", "Asset")
+                        .WithMany()
+                        .HasForeignKey("AssetId")
+                        .OnDelete(DeleteBehavior.Cascade);
+
+                    b.HasOne("ContentDatabase.Model.PageComponent", "Component")
+                        .WithMany()
+                        .HasForeignKey("ComponentId")
+                        .OnDelete(DeleteBehavior.NoAction);
+
+                    b.Navigation("Asset");
+
+                    b.Navigation("Component");
                 });
 
             modelBuilder.Entity("ContentDatabase.Model.Assets", b =>
@@ -445,13 +612,15 @@ namespace ContentDatabase.Migrations
 
                     b.HasOne("ContentDatabase.Model.AssetFileType", "AssetFileType")
                         .WithMany("Assets")
-                        .HasForeignKey("AssetFileTypeId1")
+                        .HasForeignKey("AssetFileTypeId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.HasOne("ContentDatabase.Model.Author", "CreationAuthor")
                         .WithMany()
-                        .HasForeignKey("AuthorId");
+                        .HasForeignKey("CreationAuthorId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.Navigation("AssetDomain");
 
@@ -460,62 +629,128 @@ namespace ContentDatabase.Migrations
                     b.Navigation("CreationAuthor");
                 });
 
+            modelBuilder.Entity("ContentDatabase.Model.AuthoredAssetJoin", b =>
+                {
+                    b.HasOne("ContentDatabase.Model.Assets", null)
+                        .WithMany()
+                        .HasForeignKey("AssetsId")
+                        .OnDelete(DeleteBehavior.Cascade);
+
+                    b.HasOne("ContentDatabase.Model.Assets", "CompAsset")
+                        .WithMany()
+                        .HasForeignKey("CompAssetId");
+
+                    b.HasOne("ContentDatabase.Model.AuthoredComponent", "Comp")
+                        .WithMany()
+                        .HasForeignKey("CompId");
+
+                    b.HasOne("ContentDatabase.Model.AuthoredComponent", null)
+                        .WithMany()
+                        .HasForeignKey("PageId")
+                        .OnDelete(DeleteBehavior.NoAction);
+
+                    b.Navigation("Comp");
+
+                    b.Navigation("CompAsset");
+                });
+
             modelBuilder.Entity("ContentDatabase.Model.AuthoredComponent", b =>
                 {
                     b.HasOne("ContentDatabase.Model.Author", "CreationAuthor")
                         .WithMany()
-                        .HasForeignKey("AuthorId");
+                        .HasForeignKey("CreationAuthorId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.HasOne("ContentDatabase.Model.PageComponent", "PageComponent")
                         .WithMany("AuthoredComponent")
                         .HasForeignKey("PageComponentId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.NoAction);
 
                     b.HasOne("ContentDatabase.Model.PageVersion", "PageVersion")
                         .WithMany("Components")
                         .HasForeignKey("PageVersionId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.ClientCascade)
                         .IsRequired();
+
+                    b.HasOne("ContentDatabase.Model.ComponentMarkup", "PayLoad")
+                        .WithMany("Pages")
+                        .HasForeignKey("PayLoadId")
+                        .OnDelete(DeleteBehavior.NoAction);
 
                     b.Navigation("CreationAuthor");
 
                     b.Navigation("PageComponent");
 
                     b.Navigation("PageVersion");
+
+                    b.Navigation("PayLoad");
+                });
+
+            modelBuilder.Entity("ContentDatabase.Model.ComponentMarkup", b =>
+                {
+                    b.HasOne("ContentDatabase.Model.Author", "CreationAuthor")
+                        .WithMany()
+                        .HasForeignKey("CreationAuthorId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("CreationAuthor");
                 });
 
             modelBuilder.Entity("ContentDatabase.Model.Page", b =>
                 {
                     b.HasOne("ContentDatabase.Model.Author", "CreationAuthor")
                         .WithMany()
-                        .HasForeignKey("AuthorId");
+                        .HasForeignKey("CreationAuthorId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
-                    b.HasOne("ContentDatabase.Model.PageTemplate", "PageTemplate")
+                    b.HasOne("ContentDatabase.Model.PageSlug", "Slug")
                         .WithMany("Pages")
-                        .HasForeignKey("PageTemplateId")
+                        .HasForeignKey("SlugId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("CreationAuthor");
 
-                    b.Navigation("PageTemplate");
+                    b.Navigation("Slug");
                 });
 
             modelBuilder.Entity("ContentDatabase.Model.PageComponent", b =>
                 {
                     b.HasOne("ContentDatabase.Model.Author", "CreationAuthor")
                         .WithMany("PageComponents")
-                        .HasForeignKey("AuthorId");
+                        .HasForeignKey("CreationAuthorId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("ContentDatabase.Model.PageTemplate", "PageTemplate")
+                        .WithMany("PageComponents")
+                        .HasForeignKey("PageTemplateId")
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.Navigation("CreationAuthor");
+
+                    b.Navigation("PageTemplate");
+                });
+
+            modelBuilder.Entity("ContentDatabase.Model.PageSlug", b =>
+                {
+                    b.HasOne("ContentDatabase.Model.PublishedPageSlug", "Pageslug")
+                        .WithMany()
+                        .HasForeignKey("PageslugSlugId");
+
+                    b.Navigation("Pageslug");
                 });
 
             modelBuilder.Entity("ContentDatabase.Model.PageTemplate", b =>
                 {
                     b.HasOne("ContentDatabase.Model.Author", "CreationAuthor")
                         .WithMany("PageTemplates")
-                        .HasForeignKey("AuthorId");
+                        .HasForeignKey("CreationAuthorId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.Navigation("CreationAuthor");
                 });
@@ -524,32 +759,53 @@ namespace ContentDatabase.Migrations
                 {
                     b.HasOne("ContentDatabase.Model.Author", "CreationAuthor")
                         .WithMany()
-                        .HasForeignKey("AuthorId");
-
-                    b.HasOne("ContentDatabase.Model.Page", "Page")
-                        .WithMany("PageComponenets")
-                        .HasForeignKey("PageId")
+                        .HasForeignKey("CreationAuthorId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.HasOne("ContentDatabase.Model.Page", "Page")
+                        .WithMany("PageVersions")
+                        .HasForeignKey("PageId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("ContentDatabase.Model.PageTemplate", "PageTemplate")
+                        .WithMany("PageVersions")
+                        .HasForeignKey("PageTemplateId")
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.Navigation("CreationAuthor");
 
                     b.Navigation("Page");
+
+                    b.Navigation("PageTemplate");
                 });
 
-            modelBuilder.Entity("PageComponentPageTemplate", b =>
+            modelBuilder.Entity("ContentDatabase.Model.PublishedPageSlug", b =>
                 {
-                    b.HasOne("ContentDatabase.Model.PageComponent", null)
-                        .WithMany()
-                        .HasForeignKey("PageComponentsId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                    b.HasOne("ContentDatabase.Model.Page", "Page")
+                        .WithOne()
+                        .HasForeignKey("ContentDatabase.Model.PublishedPageSlug", "PageId")
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("ContentDatabase.Model.PageTemplate", null)
-                        .WithMany()
-                        .HasForeignKey("PageTemplateId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                    b.HasOne("ContentDatabase.Model.PageVersion", "PageVersion")
+                        .WithOne()
+                        .HasForeignKey("ContentDatabase.Model.PublishedPageSlug", "PageVersionId")
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
+
+                    b.HasOne("ContentDatabase.Model.PageSlug", "Slug")
+                        .WithOne()
+                        .HasForeignKey("ContentDatabase.Model.PublishedPageSlug", "SlugId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Page");
+
+                    b.Navigation("PageVersion");
+
+                    b.Navigation("Slug");
                 });
 
             modelBuilder.Entity("ContentDatabase.Model.AssetFileType", b =>
@@ -569,9 +825,14 @@ namespace ContentDatabase.Migrations
                     b.Navigation("PageTemplates");
                 });
 
+            modelBuilder.Entity("ContentDatabase.Model.ComponentMarkup", b =>
+                {
+                    b.Navigation("Pages");
+                });
+
             modelBuilder.Entity("ContentDatabase.Model.Page", b =>
                 {
-                    b.Navigation("PageComponenets");
+                    b.Navigation("PageVersions");
                 });
 
             modelBuilder.Entity("ContentDatabase.Model.PageComponent", b =>
@@ -579,9 +840,16 @@ namespace ContentDatabase.Migrations
                     b.Navigation("AuthoredComponent");
                 });
 
-            modelBuilder.Entity("ContentDatabase.Model.PageTemplate", b =>
+            modelBuilder.Entity("ContentDatabase.Model.PageSlug", b =>
                 {
                     b.Navigation("Pages");
+                });
+
+            modelBuilder.Entity("ContentDatabase.Model.PageTemplate", b =>
+                {
+                    b.Navigation("PageComponents");
+
+                    b.Navigation("PageVersions");
                 });
 
             modelBuilder.Entity("ContentDatabase.Model.PageVersion", b =>

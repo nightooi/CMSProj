@@ -1,4 +1,6 @@
-﻿namespace CMSProj.DataLayer.UrlServices
+﻿using CMSProj.DataLayer.UrlServices;
+
+namespace CMSProj.SubSystems.BackGroundServices.UrlUpdate
 {
     public class WorkerResult<T>
     {

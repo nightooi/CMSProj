@@ -1,4 +1,4 @@
-﻿namespace CMSProj.DataLayer.UrlServices
+﻿namespace CMSProj.SubSystems.BackGroundServices.UrlUpdate
 {
     /// <summary>
     /// Started rework of the workupdate interface.

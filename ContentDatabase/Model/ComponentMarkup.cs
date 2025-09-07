@@ -1,7 +1,11 @@
-﻿using System.ComponentModel.DataAnnotations.Schema;
+﻿using Microsoft.EntityFrameworkCore;
+
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace ContentDatabase.Model
 {
+    [PrimaryKey(nameof(Id))]
     public class ComponentMarkup : CreationDetails, Id
     {
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]

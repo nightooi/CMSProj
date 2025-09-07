@@ -11,6 +11,8 @@ using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using System.Security.Cryptography.Xml;
+using NuGet.Packaging;
 namespace CMSProj
 {
 
@@ -23,9 +25,12 @@ namespace CMSProj
     public sealed class DefaultCmsSeeder : IAppSeeder
     {
         public int Order => 0;
-
         public async Task SeedAsync(ContentContext db, CancellationToken ct)
         {
+
+            await db.Database.EnsureDeletedAsync();
+            await db.Database.MigrateAsync();
+
             if (await db.Authors.AnyAsync(ct)) return;
 
             var now = DateTime.UtcNow;
@@ -38,6 +43,7 @@ namespace CMSProj
             };
             db.Authors.Add(systemAuthor);
             await db.SaveChangesAsync(ct);
+            var authors = await db.Authors.ToListAsync();
 
             var png = new AssetFileType { Assets = new List<Assets>(), FileType = "image/png" };
             var jpg = new AssetFileType { Assets = new List<Assets>(), FileType = "image/jpeg" };
@@ -45,31 +51,29 @@ namespace CMSProj
             var js = new AssetFileType { Assets = new List<Assets>(), FileType = "text/javascript" };
             db.AssetFileTypes.AddRange(png, jpg, css, js);
 
-            var cdn = new AssetHostDomain { DomainName = "CDN", DomainUrl = "https://cdn.example.com", Assets = new List<Assets>() };
+            var cdn = new AssetHostDomain { DomainName = "Local", DomainUrl = "https://localhost://", Assets = new List<Assets>() };
             var site = new AssetHostDomain { DomainName = "Site", DomainUrl = "https://www.example.com", Assets = new List<Assets>() };
             db.AssetHostDomains.AddRange(cdn, site);
             await db.SaveChangesAsync(ct);
-
-            var Slugs = new PageSlug() { Slug = "/Home" };
+            var fileTypes = await db.AssetFileTypes.ToListAsync();
+            var domains = await db.AssetHostDomains.ToListAsync();
 
             var cssAsset = new Assets
             {
                 Url = "https://cdn.example.com/styles/base.css",
                 AssetName = "Base CSS",
                 AssetDescription = "Base stylesheet",
-                FileType = css.FileType,
-                AssetFileTypeId = css.Id,
-                AssetDomain = cdn,
+                FileType = fileTypes.Where(x => x.FileType.Contains("css")).Single().FileType,
+                AssetFileType = fileTypes.Where(x => x.FileType.Contains("css")).Single(),
+                AssetDomain = domains.First(),
                 Constructed = now,
                 Generated = now,
                 Published = now,
-                AuthorId = systemAuthor.Id,
                 CopyRight = "© Example",
                 CopyRightDisclaimer = null,
                 CreationAuthor = systemAuthor,
                 LastRevisionTime = now,
                 RevisionDiff = null,
-                CreationAuthorId = systemAuthor.Id,
                 RevisionAuthor = new List<Author> { systemAuthor }
             };
 
@@ -78,101 +82,112 @@ namespace CMSProj
                 Url = "https://cdn.example.com/scripts/app.js",
                 AssetName = "App JS",
                 AssetDescription = "Frontend logic",
-                FileType = js.FileType,
-                AssetFileTypeId = js.Id,
-                AssetDomain = cdn,
+                FileType = fileTypes.Where(x=> x.FileType.Contains("javascript")).Single().FileType,
+                AssetFileType = fileTypes.Where(x=> x.FileType.Contains("javascript")).Single(),
+                AssetDomain = domains.First(),
                 Constructed = now,
                 Generated = now,
                 Published = now,
-                AuthorId = systemAuthor.Id,
                 CopyRight = "© Example",
                 CopyRightDisclaimer = null,
                 CreationAuthor = systemAuthor,
                 LastRevisionTime = now,
                 RevisionDiff = null,
-                CreationAuthorId = systemAuthor.Id,
                 RevisionAuthor = new List<Author> { systemAuthor }
             };
 
             db.Assets.AddRange(cssAsset, jsAsset);
-
+            var baseTemplate = new PageTemplate
+            {
+                Version = 1,
+                PageVersions = new List<PageVersion>(),
+                Constructed = now,
+                Generated = now,
+                Published = now,
+                CopyRight = "© Example",
+                CopyRightDisclaimer = null,
+                CreationAuthor = systemAuthor,
+                LastRevisionTime = now,
+                RevisionDiff = null,
+                RevisionAuthor = new List<Author> { systemAuthor }
+            };
+            db.PageTemplates.AddRange(baseTemplate);
+            await db.SaveChangesAsync(ct);
+            var templates = await db.PageTemplates.ToListAsync();
+            var notfoundComponent = new PageComponent
+            {
+                ComponentHtml = "<header><h1></h1></header>",
+                PageTemplate = templates.First(),
+                ChildOffset = 12,
+                SelfPageOrder = 0,
+                Constructed = now,
+                Generated = now,
+                Published = now,
+                CopyRight = "© Example",
+                CopyRightDisclaimer = null,
+                CreationAuthor = authors.First(),
+                LastRevisionTime = now,
+                RevisionDiff = null,
+                RevisionAuthor = new List<Author> { authors.First() }
+            };
             var header = new PageComponent
             {
                 ComponentHtml = "<header><h1></h1></header>",
+                PageTemplate = templates.First(),
                 ChildOffset = 11,
                 SelfPageOrder = 0,
                 Constructed = now,
                 Generated = now,
                 Published = now,
-                AuthorId = systemAuthor.Id,
                 CopyRight = "© Example",
                 CopyRightDisclaimer = null,
-                CreationAuthor = systemAuthor,
+                CreationAuthor = authors.First(),
                 LastRevisionTime = now,
                 RevisionDiff = null,
-                CreationAuthorId = systemAuthor.Id,
-                RevisionAuthor = new List<Author> { systemAuthor }
+                RevisionAuthor = new List<Author> { authors.First() }
             };
 
             var main = new PageComponent
             {
                 ComponentHtml = "<main><section></section></main>",
-                ChildOffset = 14,
+                PageTemplate = templates.First(),
+                ChildOffset = 17,
                 SelfPageOrder = 1,
                 Constructed = now,
                 Generated = now,
                 Published = now,
-                AuthorId = systemAuthor.Id,
                 CopyRight = "© Example",
                 CopyRightDisclaimer = null,
-                CreationAuthor = systemAuthor,
+                CreationAuthor = authors.First(),
                 LastRevisionTime = now,
                 RevisionDiff = null,
-                CreationAuthorId = systemAuthor.Id,
-                RevisionAuthor = new List<Author> { systemAuthor }
+                RevisionAuthor = new List<Author> { authors.First() }
             };
 
             var footer = new PageComponent
             {
                 ComponentHtml = "<footer><small></small></footer>",
+                PageTemplate = templates.First(),
                 ChildOffset = 14,
                 SelfPageOrder = 2,
                 Constructed = now,
                 Generated = now,
                 Published = now,
-                AuthorId = systemAuthor.Id,
                 CopyRight = "© Example",
                 CopyRightDisclaimer = null,
-                CreationAuthor = systemAuthor,
+                CreationAuthor = authors.First(),
                 LastRevisionTime = now,
                 RevisionDiff = null,
-                CreationAuthorId = systemAuthor.Id,
-                RevisionAuthor = new List<Author> { systemAuthor }
+                RevisionAuthor = new List<Author> { authors.First() }
             };
 
             db.PageComponents.AddRange(header, main, footer);
             await db.SaveChangesAsync(ct);
+            var comps = await db.PageComponents.ToListAsync();
 
-            var baseTemplate = new PageTemplate
-            {
-                Version = 1,
-                PageComponents = new List<PageComponent> { header, main, footer },
-                Pages = new List<Page>(),
-                Constructed = now,
-                Generated = now,
-                Published = now,
-                AuthorId = systemAuthor.Id,
-                CopyRight = "© Example",
-                CopyRightDisclaimer = null,
-                CreationAuthor = systemAuthor,
-                LastRevisionTime = now,
-                RevisionDiff = null,
-                CreationAuthorId = systemAuthor.Id,
-                RevisionAuthor = new List<Author> { systemAuthor }
-            };
-            db.PageTemplates.Add(baseTemplate);
-            await db.SaveChangesAsync(ct);
 
+            var Slugs = new PageSlug() { Slug = "Home" };
+            var notFound = new PageSlug() { Slug = "NotFound" };
             var homePage = new Page
             {
                 Slug = Slugs,
@@ -181,52 +196,84 @@ namespace CMSProj
                 Constructed = now,
                 Generated = now,
                 Published = now,
-                AuthorId = systemAuthor.Id,
                 CopyRight = "© Example",
                 CopyRightDisclaimer = null,
                 CreationAuthor = systemAuthor,
                 LastRevisionTime = now,
                 RevisionDiff = null,
-                CreationAuthorId = systemAuthor.Id,
                 RevisionAuthor = new List<Author> { systemAuthor }
             };
-            db.Pages.Add(homePage);
+            var notFoundPage = new Page
+            {
+                Slug = notFound,
+                PageName = "Notfound",
+                PageVersions = [],
+                Constructed = now,
+                Generated = now,
+                Published =now,
+                CopyRight = "© Example",
+                CopyRightDisclaimer = null,
+                CreationAuthor = systemAuthor,
+                LastRevisionTime = now,
+                RevisionDiff = null,
+                RevisionAuthor = [systemAuthor],
+            };
+            db.Pages.AddRange(homePage, notFoundPage);
             await db.SaveChangesAsync(ct);
+            var page = await db.Pages.ToListAsync();
 
             var v1 = new PageVersion
             {
-                PageId = homePage.Id,
                 Version = 1,
                 Components = new List<AuthoredComponent>(),
+                PageTemplate = templates.First(),
+                Page = page.First(),
                 Constructed = now,
                 Generated = now,
                 Published = now,
-                AuthorId = systemAuthor.Id,
                 CopyRight = "© Example",
                 CopyRightDisclaimer = null,
                 CreationAuthor = systemAuthor,
                 LastRevisionTime = now,
                 RevisionDiff = null,
-                CreationAuthorId = systemAuthor.Id,
+                RevisionAuthor = new List<Author> { systemAuthor }
+            };
+            var notFv1 = new PageVersion
+            {
+                Version = 1,
+                Components = new List<AuthoredComponent>(),
+                PageTemplate = templates.First(),
+                Page = page.First(),
+                Constructed = now,
+                Generated = now,
+                Published = now,
+                CopyRight = "© Example",
+                CopyRightDisclaimer = null,
+                CreationAuthor = systemAuthor,
+                LastRevisionTime = now,
+                RevisionDiff = null,
                 RevisionAuthor = new List<Author> { systemAuthor }
             };
             db.PageVersions.Add(v1);
             await db.SaveChangesAsync(ct);
-
-            var c1Contents = new List<CLRComponentContent>
+            var versions = await db.PageVersions.ToListAsync();
+        
+            var c1Contents = new CLRComponentContent()
             {
-                new CLRComponentContent { Id = Guid.NewGuid(), Content = "Welcome" },
-                new CLRComponentContent { Id = Guid.NewGuid(), Content = "to the site" }
+                Content = [
+                    new () { Id = Guid.NewGuid(), Content="Welcome"},
+                    new () { Id = Guid.NewGuid(), Content= "To the Site"}
+                    ]
             };
-            var c1Offsets = new List<ContentOffset>
+                
+            var c1Offsets = new List<CLRComponentMarkup.ContentOffset>
             {
-                new ContentOffset { ContentId = c1Contents[0].Id, Offset = 9 },
-                new ContentOffset { ContentId = c1Contents[1].Id, Offset = 9 }
+                new CLRComponentMarkup.ContentOffset { ContentId = c1Contents.Content[0].Id, Offset = 4 },
+                new CLRComponentMarkup.ContentOffset { ContentId = c1Contents.Content[1].Id, Offset = 9 }
             };
             var c1MarkupObj = new CLRComponentMarkup
             {
-                Id = Guid.NewGuid(),
-                Markup = "<h1></h1>",
+                Markup = "<h1></h1>\n",
                 Content = c1Offsets
             };
 
@@ -236,14 +283,11 @@ namespace CMSProj
                 Content = JsonSerializer.Serialize(c1Contents),
                 Constructed = now,
                 Generated = now,
-                Published = now,
-                AuthorId = systemAuthor.Id,
                 CopyRight = "© Example",
                 CopyRightDisclaimer = null,
                 CreationAuthor = systemAuthor,
                 LastRevisionTime = now,
                 RevisionDiff = null,
-                CreationAuthorId = systemAuthor.Id,
                 RevisionAuthor = new List<Author> { systemAuthor }
             };
             db.ComponentMarkups.Add(headerPayload);
@@ -251,41 +295,36 @@ namespace CMSProj
 
             var headerComponentInstance = new AuthoredComponent
             {
-                PageComponentId = header.Id,
-                PageVersionId = v1.Id,
                 PayLoad = headerPayload,
                 ComponentName = "Header.Title.v1",
-                CssUrl = cssAsset.Url,
-                JsUrl = jsAsset.Url,
-                HeaderJsUrl = null,
+                CssHeaderTags = cssAsset.Url,
+                JsHeaderTags = jsAsset.Url,
+                JsBodyTags = null,
                 PageVersion = v1,
                 PageComponent = header,
                 Constructed = now,
                 Generated = now,
                 Published = now,
-                AuthorId = systemAuthor.Id,
                 CopyRight = "© Example",
                 CopyRightDisclaimer = null,
                 CreationAuthor = systemAuthor,
                 LastRevisionTime = now,
                 RevisionDiff = null,
-                CreationAuthorId = systemAuthor.Id,
                 RevisionAuthor = new List<Author> { systemAuthor }
             };
 
-            var c2Contents = new List<CLRComponentContent>
+            var c2Contents = new CLRComponentContent()
             {
-                new CLRComponentContent { Id = Guid.NewGuid(), Content = "<p>Getting started</p>" }
+                Content = [new () { Content = "<p>Getting started</p>" }]
             };
-            var c2Offsets = new List<ContentOffset>
+            var c2Offsets = new CLRComponentMarkup.ContentOffset()
             {
-                new ContentOffset { ContentId = c2Contents[0].Id, Offset = 8 }
+              ContentId = c2Contents.Content[0].Id, Offset = 9
             };
             var c2MarkupObj = new CLRComponentMarkup
             {
-                Id = Guid.NewGuid(),
                 Markup = "<section></section>",
-                Content = c2Offsets
+                Content = [c2Offsets]
             };
 
             var mainPayload = new ComponentMarkup
@@ -295,13 +334,11 @@ namespace CMSProj
                 Constructed = now,
                 Generated = now,
                 Published = now,
-                AuthorId = systemAuthor.Id,
                 CopyRight = "© Example",
                 CopyRightDisclaimer = null,
                 CreationAuthor = systemAuthor,
                 LastRevisionTime = now,
                 RevisionDiff = null,
-                CreationAuthorId = systemAuthor.Id,
                 RevisionAuthor = new List<Author> { systemAuthor }
             };
             db.ComponentMarkups.Add(mainPayload);
@@ -309,29 +346,27 @@ namespace CMSProj
 
             var mainComponentInstance = new AuthoredComponent
             {
-                PageComponentId = main.Id,
-                PageVersionId = v1.Id,
                 PayLoad = mainPayload,
                 ComponentName = "Main.Section.v1",
-                CssUrl = cssAsset.Url,
-                JsUrl = jsAsset.Url,
-                HeaderJsUrl = null,
+                CssHeaderTags = cssAsset.Url,
+                JsHeaderTags = jsAsset.Url,
+                JsBodyTags = null,
                 PageVersion = v1,
-                PageComponent = main,
+                PageComponent = comps.Single(x => x.ComponentHtml.Contains("main")),
                 Constructed = now,
                 Generated = now,
                 Published = now,
-                AuthorId = systemAuthor.Id,
                 CopyRight = "© Example",
                 CopyRightDisclaimer = null,
                 CreationAuthor = systemAuthor,
                 LastRevisionTime = now,
                 RevisionDiff = null,
-                CreationAuthorId = systemAuthor.Id,
                 RevisionAuthor = new List<Author> { systemAuthor }
             };
-
-            db.AuthoredComponents.AddRange(headerComponentInstance, mainComponentInstance);
+            versions.Where(x=> x.Page.PageName == "Home").First().Components.AddRange([mainComponentInstance, headerComponentInstance]);
+            await db.SaveChangesAsync();
+            db.PublishedPages.Add(new PublishedPageSlug() { Page = homePage, PageVersion = v1, PublishedAt = DateTime.Now, Slug = Slugs });
+            db.PublishedPages.Add(new PublishedPageSlug { Page = notFoundPage, PageVersion = notFv1, PublishedAt = DateTime.Now, Slug = notFound });
             await db.SaveChangesAsync(ct);
         }
     }
@@ -345,9 +380,8 @@ namespace CMSProj
         {
             using var scope = _services.CreateScope();
             var db = scope.ServiceProvider.GetRequiredService<ContentContext>();
-            await db.Database.MigrateAsync(cancellationToken);
-            var seeders = scope.ServiceProvider.GetServices<IAppSeeder>().OrderBy(s => s.Order).ToArray();
-            foreach (var seeder in seeders) await seeder.SeedAsync(db, cancellationToken);
+            var seeders = scope.ServiceProvider.GetRequiredService<IAppSeeder>();
+            await seeders.SeedAsync(db, cancellationToken);
         }
 
         public Task StopAsync(CancellationToken cancellationToken) => Task.CompletedTask;
@@ -357,8 +391,8 @@ namespace CMSProj
     {
         public static IServiceCollection AddCmsSeeders(this IServiceCollection services, params Assembly[] assemblies)
         {
-            if (assemblies == null || assemblies.Length == 0) assemblies = new[] { Assembly.GetExecutingAssembly() };
             services.AddHostedService<RunSeedersHostedService>();
+            services.AddSingleton<IAppSeeder, DefaultCmsSeeder>();
             return services;
         }
     }

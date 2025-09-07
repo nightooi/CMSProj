@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Net;
 using System.Security.Principal;
 
+using CMSProj.DataLayer;
 using CMSProj.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Win32.SafeHandles;
@@ -13,11 +14,13 @@ namespace CMSProj.Controllers
     public class DynamicPageController : Controller
     {
         private readonly ILogger<DynamicPageController> _logger;
-        private readonly IContentRepository _cmsRepo;
-        public DynamicPageController(ILogger<DynamicPageController> logger, IContentRepository repo)
+        private readonly IPageRepository _cmsRepo;
+        private readonly IContentBuilder _builder;
+        public DynamicPageController(ILogger<DynamicPageController> logger, IPageRepository repo, IContentBuilder builder)
         {
             _logger = logger;
             _cmsRepo = repo;
+            _builder = builder;
         }
         /// <summary>
         /// if this correctly uses a task pattern, the call to admin/endclient is opaque at this layer, it should get injected into the controller insantiation 
@@ -27,10 +30,13 @@ namespace CMSProj.Controllers
         /// <param name="pageGuid"></param>
         /// <returns></returns>
         [HttpGet(Name = "{pageGuid}")]
-        public IActionResult RenderPage([FromRoute(Name = "pageGuid")] string pageGuid)
+        public async Task<IActionResult> RenderPage([FromRoute(Name = "pageGuid")] string pageGuid, CancellationToken token)
         {
-            var pageExcavation = _cmsRepo.GetPageContent(new Guid(pageGuid));
-            var content = new RenderContent() { Content = pageExcavation };
+            var guid = Guid.Parse(pageGuid);
+            var pageExcavation = await _cmsRepo.ScaffoldPageAsync(guid, token);
+            var assets = _cmsRepo.CopyAssetsToServingDirectory(guid, token);
+            var page = await _cmsRepo.ConstructCompletePageAsync(pageExcavation, guid, token);
+            var content =_builder.BuildContent(page);
 
             return View(content);
         }

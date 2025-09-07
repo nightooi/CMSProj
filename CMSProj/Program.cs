@@ -7,6 +7,11 @@ using System.Reflection.Metadata.Ecma335;
 using System.Threading.Tasks;
 using ContentDatabase.DIExtensions;
 using CMSProj.DataLayer.ServiceRegistration;
+using CMSProj.DataLayer;
+using CMSProj;
+using CMSProj.Data;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -19,9 +24,15 @@ builder.WebHost.ConfigureKestrel(x => {
 // Add services to the container.
 builder.Services.AddControllersWithViews();
 builder.Services.AddExistingRoutesHandler();
+builder.Services.AddContentContext(builder.Configuration.GetConnectionString("Default")!);
+
+builder.Services.AddDbContext<IdentityContext>(options => options.UseSqlServer(connectionString));
+
+builder.Services.AddDefaultIdentity<AdminUser>(options => options.SignIn.RequireConfirmedAccount = true).AddEntityFrameworkStores<IdentityContext>();
 builder.Services.RegisterDynmicServices();
 builder.Services.AddRoutesServices();
-builder.Services.AddContentContext(builder.Configuration.GetConnectionString("Default")!);
+builder.Services.AddPageServices();
+builder.Services.AddCmsSeeders();
 
 var app = builder.Build();
 

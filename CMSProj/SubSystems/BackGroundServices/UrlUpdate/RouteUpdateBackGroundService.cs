@@ -1,12 +1,10 @@
-﻿using CMSProj.DataLayer.UrlServices;
-
-using Microsoft.CodeAnalysis.CSharp.Syntax;
+﻿using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 using NuGet.Packaging.Signing;
 
 using System.ComponentModel;
 
-namespace CMSProj.SubSystems.BackGroundServices
+namespace CMSProj.SubSystems.BackGroundServices.UrlUpdate
 {
     public class RouteUpdateBackGroundService : BackgroundService
     {
@@ -27,6 +25,10 @@ namespace CMSProj.SubSystems.BackGroundServices
                 {
                     var updateRoutes = scope.ServiceProvider.GetRequiredService<IUpdateRouteManagerService>();
                     var resultManager = scope.ServiceProvider.GetRequiredService<IWorkResultOrchestrator<WorkerResult<int>>>();
+                    //
+                    //this is a statefull pattern... it kindofworks...
+                    //but honestly the initialize work method should just be called within updateworkstate in order to keep the interface stateless
+                    //
                     resultManager.InitializeWork();
                     resultManager.UpdateWorkState(this, WorkerState.Initiated, LogLevel.Information | LogLevel.Debug);
                     resultManager.RunningTask = updateRoutes.UpdateRoutes(stoppingToken);

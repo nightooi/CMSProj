@@ -7,7 +7,7 @@ namespace ContentDatabase.Model
 {
     [Index(nameof(FileType), IsUnique =true)]
     [PrimaryKey(nameof(Id))]
-    public class AssetFileType : Id
+    public class AssetFileType 
     {
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public Guid Id { get; }

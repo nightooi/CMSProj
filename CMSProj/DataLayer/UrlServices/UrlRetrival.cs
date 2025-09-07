@@ -6,22 +6,29 @@ namespace CMSProj.DataLayer.UrlServices
 {
     public class UrlRetrival : IUrlRetrievalService
     {
-        ContentContext _ctx;
+        IServiceScopeFactory _provider;
         IDatalayerFactory<UrlGuidAdapter, ContentDatabase.Model.PageSlug> _adapterFactory;
 
-        public UrlRetrival(ContentContext ctx, IDatalayerFactory<UrlGuidAdapter, ContentDatabase.Model.PageSlug> adapterFactory)
+        public UrlRetrival(IServiceScopeFactory scopeFact, 
+            IDatalayerFactory<UrlGuidAdapter, ContentDatabase.Model.PageSlug> adapterFactory)
         {
-            _ctx = ctx;
+            _provider = scopeFact;
             _adapterFactory = adapterFactory;
         }
         public ICollection<UrlGuidAdapter> GetUrls()
         {
+            using var scope = _provider.CreateScope();
+            var _ctx = scope.ServiceProvider.GetRequiredService<ContentContext>();
             return _ctx.PageSlugs.ToList().Select(x => _adapterFactory.Create(x)).ToList();
         }
 
         public async Task<ICollection<UrlGuidAdapter>> GetUrlsAsync(CancellationToken token)
         {
-            return (await _ctx.PageSlugs.ToListAsync()).Select(x => _adapterFactory.Create(x)).ToList();
+            using (var scope = _provider.CreateAsyncScope())
+            {
+                var _ctx = scope.ServiceProvider.GetRequiredService<ContentContext>();
+                return (await _ctx.PageSlugs.ToListAsync()).Select(x => _adapterFactory.Create(x)).ToList();
+            }
         }
     }
 }

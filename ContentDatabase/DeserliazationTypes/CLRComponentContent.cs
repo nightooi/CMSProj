@@ -7,7 +7,11 @@
     /// </summary>
     public class CLRComponentContent
     {
-        public Guid Id { get; set; }
-        public string  Content { get; set; }
+        public List<ContentDef> Content { get; set; }
+        public class ContentDef
+        {
+            public Guid Id { get; set; }
+            public string  Content { get; set; }
+        }
     }
 }
