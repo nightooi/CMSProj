@@ -79,13 +79,13 @@ public class DbRouteRepository : IRouteRepository, IPostActivator<IRouteReposito
         var definedUrl = MatchRoute(route);
         Guid guid;
         if (!_routes.TryGetValue(definedUrl, out guid))
-            return _routes["/NotFound"];
+            return _routes["NotFound"];
         return guid;
     }
     private string MatchRoute(string? route)
     {
         if (route is null || route == string.Empty)
-            return "/Home";
+            return "Home";
 
         Regex regex = routeMatcherFactory
             .Create(route);
@@ -96,7 +96,7 @@ public class DbRouteRepository : IRouteRepository, IPostActivator<IRouteReposito
             if (regex.IsMatch(defined))
                 return defined;
         }
-        return "/NotFound";
+        return "NotFound";
     }
     public async Task<Guid?> GetPageGuidAsync(string? route, CancellationToken token)
     {

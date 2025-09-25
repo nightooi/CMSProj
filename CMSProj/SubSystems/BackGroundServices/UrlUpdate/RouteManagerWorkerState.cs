@@ -10,12 +10,16 @@ namespace CMSProj.SubSystems.BackGroundServices.UrlUpdate
         public override Task RunningTask { get; set; }
         protected override ILogger<IWorkResultOrchestrator<WorkerResult<int>>> Logger { get; set; }
 
-        public RouteManagerWorkerState(WorkerResultFactory<int> resultFactory, LogMessageFactory messageFactory) : base(resultFactory)
+        public RouteManagerWorkerState(
+            WorkerResultFactory<int> resultFactory,
+            LogMessageFactory messageFactory,
+            ILogger<IWorkResultOrchestrator<WorkerResult<int>>> logger) : base(resultFactory)
         {
             _messageFactory = messageFactory;
             _resultFactory = resultFactory;
             _currentState = WorkerState.Initiated;
             _stageStamps = new();
+            Logger = logger;
             _stageStamps.Add(DateTime.UtcNow);
         }
 
@@ -106,7 +110,8 @@ namespace CMSProj.SubSystems.BackGroundServices.UrlUpdate
         /// </summary>
         public override void Dispose()
         {
-            RunningTask.Dispose();
+            if(RunningTask is not null)
+                RunningTask.Dispose();
         }
     }
 }

@@ -1,4 +1,6 @@
-﻿using ContentDatabase;
+﻿using CMSProj.DataLayer.PageServices.AdapterFactories;
+
+using ContentDatabase;
 
 using Microsoft.EntityFrameworkCore;
 

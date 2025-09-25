@@ -1,0 +1,129 @@
+﻿@using CMSProj.SubSystems.Publishing
+@section Headers {
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.1/normalize.min.css">
+    @{
+        int i = 0;
+        foreach (var str in ViewBag.RenderContent.InjectHeaders().Split("\n"))
+        {
+            var split = str.Split("/");
+            var len = split.Length < 1 ? 0 : split.Length - 1;
+            var name = len == 0 ? string.Empty : split[len];
+
+            <link rel="@name.Split(".")[0]" href="@str" />
+            i++;
+        }
+    }
+}
+<div class="position-fixed top-50 start-0 translate-middle-y p-2 page-edit-menu" id="page-edit-menu" style="z-index:10000">
+    <div class="d-md-flex container py-3 ">
+        <div class="btn-group-vertical w-100">
+            <Button type="button" class="btn btn-primary" id="ap">AddPage</Button>
+            <Button type="button" class="btn btn-primary" id="dp">Delete Page</Button>
+            <Button type="button" class="btn btn-primary" id="ce">Commit Edit</Button>
+            <Button type="button" class="btn btn-primary" id="de">Edit</Button>
+        </div>
+    </div>
+</div>
+<div class="defs d-none" id="template-Items">
+    <div class="header-ul" id="hdr">
+        <div class="menu-trigger">M</div>
+        <div class="menu-actions">
+            <button id="addItem">+Item</button>
+            <button id="addList">+List</button>
+        </div>
+    </div>
+
+    <div class="menu-row" id="menuRow">
+        <ul class="menu-list"></ul>
+    </div>
+    <div class="container py-3 position-relative" id="heading-def">
+        <div class="container-fluid px-2 my-3">
+            <div class="card card-body shadow-sm position-relative">
+                <h1 class="mb-0 target">Heading</h1>
+            </div>
+        </div>
+    </div>
+    <div class="container py-3 position-relative" id="paragraph-def">
+            <div class="container-fluid px-2 my-3">
+            <div class="card card-body shadow-sm position-relative">
+                <p class="mb-0 target text-center">Your paragraph text...</p>
+            </div>
+        </div>
+    </div>
+<div id="image-def">
+    <div class="card card-body shadow-sm position-relative" id="">
+        <img class="img-fluid rounded shadow-sm d-block mx-auto target" src="https://someurl.com/image" alt="Image">
+    </div>
+</div>
+    <div class="container-fluid px-2 my-3" id="url-def">
+        <div class="card card-body shadow-sm position-relative">
+            <a class="link-primary text-decoration-none target" href="https://someurl.com/something" target="_blank" rel="noopener noreferrer">Items</a>
+        </div>
+    </div>
+    <div class="position-sticky top-0 bg-body border-bottom position-relative adminelem" id="component-manager">
+        <div class="d-flex justify-content-center gap-2 py-2">
+            <button class="btn btn-primary" id="add-heading ">+H</button>
+            <button class="btn btn-success" id="add-text     ">+Text</button>
+            <button class="btn btn-info"    id="add-link     ">+Link</button>
+            <button class="btn btn-warning" id="add-ima      ">+Image</button>
+            <button class="btn btn-dark"    id="add-nav      ">+Nav</button>
+        </div>
+    </div>
+    <div class="d-flex gap-2 adminelem" id="nav-edit-activate">
+        <button class="btn btn-outline-primary btn-sm" type="button" id="add-item" title="Add new item">+</button>
+    </div>
+
+
+    <div class="d-flex align-items-center gap-2 me-2" id="nav-item-opts">
+        <button class="btn btn-sm btn-outline-dark" data-type="style">CSS</button>
+        <button class="btn btn-sm btn-primary " data-type="edit">Edit</button>
+        <button class="btn btn-sm btn-outline-danger" data-type="remove">×</button>
+    </div>
+    <li class="list-group-item p-0  flex-grow-1 flex-fill h-100" draggable="false" id="h-nav-item">
+        <div class="w-100 position-relative ">
+            <div class="d-flex align-items-center justify-content-between gap-2">
+                <a class="flex-grow-1 d-block py-2 px-3 text-decoration-none link-body-emphasis text-center target" href="#" target="">New Item</a>
+            </div>
+        </div>
+    </li>
+    <div class="menu-trigger" id="menu-def" style="z-index: 400">
+        M
+        <div>
+            <div class="menu-list-wrapper" id="lili-wrapper">
+                <div class="menu-list-header d-flex"><p class="target">Section 1</p></div>
+                <div class="menu-list " id="list-list">
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="header-ul d-flex align-items-center justify-content-between p-2 border-bottom bg-body" id="header-ul">
+        <div class="d-flex align-items-center gap-2 flex-grow-1 w-100 flex-row">
+        </div>
+    </div>
+</div>
+
+<div class="col" id="clientArea">
+    @foreach (var str in ViewBag.RenderContent.InjectBody())
+    {
+        @Html.Raw(str)
+    }
+</div>
+
+<div id="cms-status" class="cms-status d-none">
+    <span id="cms-status-text">Ready</span>
+</div>
+@section Scripts {
+    @foreach (var str in ViewBag.Rendercontent.InjectScripts().Split("\n"))
+    {
+        @Html.Raw(str)
+    }
+
+    @if (User?.Identity?.IsAuthenticated == true && User.IsInRole("Admin"))
+    {
+        <script src="~/js/lib/admin/admins_scripts.js" asp-append-version="true"></script>
+        <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
+    }
+}
+
+

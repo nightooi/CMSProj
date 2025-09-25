@@ -22,14 +22,18 @@ public class RouteTransformer : DynamicRouteValueTransformer
         (HttpContext httpContext,
         RouteValueDictionary values)
     {
-
         var route = (string?)values["slug"];
 
         if (route is null) 
             route = "Home";
 
-        if (!_slugPattern.IsMatch(route))
+        var match = _slugPattern.IsMatch(route);
+
+        if (!match)
             route = "NotFound";
+
+
+    
 
         //
         // this pattern works for simple implementations but will create issues with page versioning.
@@ -48,13 +52,26 @@ public class RouteTransformer : DynamicRouteValueTransformer
         // and the call to the db is evaluated immediately and the entities immediately deep copied it works.
         // 
         var routeL = httpContext.RequestServices.GetRequiredService<IRouteRepository>();
-        var guid = await routeL.GetPageGuidAsync(route, httpContext.RequestAborted);
+        Func<string, Task<Guid?>> func = (route) =>
+        {
+            return routeL.
+             GetPageGuidAsync(route,
+             httpContext.RequestAborted);
+        };
+
+        if (match && route.StartsWith("Admin"))
+            return new RouteValueDictionary()
+            {
+                ["controller"] = "Admin",
+                ["action"] = "RenderPageAdmin",
+                ["pageGuid"] = await func(route.Remove(0, 6))
+            };
 
         return new RouteValueDictionary()
         {
             ["controller"] = "DynamicPage",
             ["action"] = "RenderPage",
-            ["pageGuid"] = guid.ToString()
+            ["pageGuid"] = await func(route)
         };
     }
 }

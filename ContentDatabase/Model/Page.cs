@@ -12,8 +12,8 @@ namespace ContentDatabase.Model
         [Key]
         public Guid Id { get; }
         [ForeignKey(nameof(PageSlug.Id))]
-        public Guid SlugId { get; set; }
-        public PageSlug Slug { get; set; }
+        public Guid? SlugId { get; set; }
+        public PageSlug? Slug { get; set; }
         [MaxLength(1000)]
         public string PageName { get; set; }
         public ICollection<PageVersion>? PageVersions { get; set; } = new List<PageVersion>();

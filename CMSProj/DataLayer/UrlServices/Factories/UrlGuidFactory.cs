@@ -1,4 +1,6 @@
-﻿using ContentDatabase.Model;
+﻿using CMSProj.DataLayer.PageServices.AdapterFactories;
+
+using ContentDatabase.Model;
 
 namespace CMSProj.DataLayer.UrlServices.Factories
 {

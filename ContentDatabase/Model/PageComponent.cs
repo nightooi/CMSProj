@@ -20,7 +20,7 @@ namespace ContentDatabase.Model
         //0 Based on how many components before self
         public int SelfPageOrder { get; set; }
         public virtual ICollection<AuthoredComponent>? AuthoredComponent { get; set; } = new List<AuthoredComponent>();
-        public PageTemplate PageTemplate { get; set; } = null!;
+        public PageTemplate? PageTemplate { get; set; } = null!;
         public string? CssHeaderTags { get ; set ; }
         public string? JsHeaderTags { get ; set ; }
         public string? JsBodyTags { get ; set ; }

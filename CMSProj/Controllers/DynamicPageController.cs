@@ -4,13 +4,17 @@ using System.Diagnostics;
 using System.Net;
 using System.Security.Principal;
 
-using CMSProj.DataLayer;
-using CMSProj.Models;
+using CMSProj.DataLayer.PageServices.Repo;
+using CMSProj.IdentityData.Models;
+using CMSProj.SubSystems.Publishing;
+
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Win32.SafeHandles;
 
 namespace CMSProj.Controllers
 {
+
+    [ApiExplorerSettings(IgnoreApi = true)]
     public class DynamicPageController : Controller
     {
         private readonly ILogger<DynamicPageController> _logger;
@@ -22,14 +26,8 @@ namespace CMSProj.Controllers
             _cmsRepo = repo;
             _builder = builder;
         }
-        /// <summary>
-        /// if this correctly uses a task pattern, the call to admin/endclient is opaque at this layer, it should get injected into the controller insantiation 
-        /// at request time.
-        /// Extra dependency to the controller -> not sure what yet.
-        /// </summary>
-        /// <param name="pageGuid"></param>
-        /// <returns></returns>
-        [HttpGet(Name = "{pageGuid}")]
+
+        [ApiExplorerSettings(IgnoreApi = true)]
         public async Task<IActionResult> RenderPage([FromRoute(Name = "pageGuid")] string pageGuid, CancellationToken token)
         {
             var guid = Guid.Parse(pageGuid);
@@ -42,13 +40,13 @@ namespace CMSProj.Controllers
         }
 
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
+
         public IActionResult Error()
         {
             return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
         }
 
-        [HttpGet(Name = "{pageGuid}")]
-        [HttpGet(Name = "{params}")]
+        [ApiExplorerSettings(IgnoreApi = true)]
         public IActionResult RenderParameteredPage(
             [FromRoute(Name = "pageGuid")] string? pageGuid,
             [FromRoute(Name = "params")] params object[]? values)

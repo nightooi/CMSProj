@@ -360,7 +360,7 @@ namespace ContentDatabase.Migrations
                     b.Property<string>("RevisionDiff")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<Guid>("SlugId")
+                    b.Property<Guid?>("SlugId")
                         .HasColumnType("uniqueidentifier");
 
                     b.HasKey("Id");
@@ -419,7 +419,7 @@ namespace ContentDatabase.Migrations
                     b.Property<string>("OtherHeaders")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<Guid>("PageTemplateId")
+                    b.Property<Guid?>("PageTemplateId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime>("Published")
@@ -587,7 +587,7 @@ namespace ContentDatabase.Migrations
                     b.HasOne("ContentDatabase.Model.Assets", "Asset")
                         .WithMany()
                         .HasForeignKey("AssetId")
-                        .OnDelete(DeleteBehavior.Cascade);
+                        .OnDelete(DeleteBehavior.NoAction);
 
                     b.HasOne("ContentDatabase.Model.PageComponent", "Component")
                         .WithMany()
@@ -667,8 +667,7 @@ namespace ContentDatabase.Migrations
                     b.HasOne("ContentDatabase.Model.PageVersion", "PageVersion")
                         .WithMany("Components")
                         .HasForeignKey("PageVersionId")
-                        .OnDelete(DeleteBehavior.ClientCascade)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.ClientCascade);
 
                     b.HasOne("ContentDatabase.Model.ComponentMarkup", "PayLoad")
                         .WithMany("Pages")
@@ -705,9 +704,7 @@ namespace ContentDatabase.Migrations
 
                     b.HasOne("ContentDatabase.Model.PageSlug", "Slug")
                         .WithMany("Pages")
-                        .HasForeignKey("SlugId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("SlugId");
 
                     b.Navigation("CreationAuthor");
 
@@ -783,20 +780,17 @@ namespace ContentDatabase.Migrations
                     b.HasOne("ContentDatabase.Model.Page", "Page")
                         .WithOne()
                         .HasForeignKey("ContentDatabase.Model.PublishedPageSlug", "PageId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("ContentDatabase.Model.PageVersion", "PageVersion")
                         .WithOne()
                         .HasForeignKey("ContentDatabase.Model.PublishedPageSlug", "PageVersionId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("ContentDatabase.Model.PageSlug", "Slug")
                         .WithOne()
                         .HasForeignKey("ContentDatabase.Model.PublishedPageSlug", "SlugId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.Cascade);
 
                     b.Navigation("Page");
 

@@ -1,0 +1,6 @@
+@CMSAdminCrud_HostAddress = http://localhost:5105
+
+GET {{CMSAdminCrud_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

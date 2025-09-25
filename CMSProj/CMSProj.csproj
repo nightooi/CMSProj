@@ -5,14 +5,20 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <UserSecretsId>949fe0a8-7e84-4944-b2e6-276e5c465394</UserSecretsId>
+
+     <GenerateDocumentationFile>true</GenerateDocumentationFile>
+	 <NoWarn>$(NoWarn);1591</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="bootstrap" Version="5.3.6" />
+    <PackageReference Include="HtmlAgilityPack" Version="1.12.2" />
     <PackageReference Include="jQuery" Version="3.7.1" />
     <PackageReference Include="jquery.mobile" Version="1.4.5" />
     <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="8.0.11" />
     <PackageReference Include="Microsoft.AspNetCore.Identity.UI" Version="8.0.11" />
+    <PackageReference Include="Microsoft.AspNetCore.MVC.Versioning" Version="5.1.0" />
+    <PackageReference Include="Microsoft.AspNetCore.MVC.Versioning.ApiExplorer" Version="5.1.0" />
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.8" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Abstractions" Version="9.0.8" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Analyzers" Version="9.0.8" />
@@ -29,6 +35,8 @@
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="9.0.8" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="9.0.8" />
     <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="8.0.7" />
+    <PackageReference Include="swashbuckle.AspnetCore" Version="9.0.4" />
+    <PackageReference Include="Swashbuckle.AspNetCore.SwaggerUI" Version="9.0.4" />
 
   </ItemGroup>
 
@@ -45,7 +53,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="DataLayer\DatalayerExtensions\" />
     <Folder Include="DIExtensions\" />
     <Folder Include="wwwroot\46c4f891-9764-447d-8f85-d79cc78c8513\css\" />
     <Folder Include="wwwroot\46c4f891-9764-447d-8f85-d79cc78c8513\js\" />

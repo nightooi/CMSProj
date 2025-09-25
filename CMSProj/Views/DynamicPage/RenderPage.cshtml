@@ -1,10 +1,34 @@
 ﻿@using CMSProj.Controllers;
+@using CMSProj.SubSystems.Publishing
 @model IRenderContent
-@{
-    ViewData["Title"] = "Home Page";
+
+@section Headers{
+    @{
+        <link rel="stylesheet" href="/css/site.css" />
+        <link rel="stylesheet" href="/lib/bootstrap/dist/css/bootstrap.css" />
+        int i = 0;
+        foreach (var str in Model.InjectHeaders().Split("\n"))
+        {
+            var split = str.Split("/");
+            var len = split.Length < 1 ? 0 : split.Length - 1;
+            var name = len == 0 ? string.Empty : split[len];
+
+            <link rel="@name.Split(".")[0]" href="@str" />
+            i++;
+        }
+    }
 }
 
 @foreach(var str in Model.InjectBody())
 {
     @Html.Raw(str)
+}
+
+@section Scripts{
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+    @foreach(var str in Model.InjectScripts())
+    {
+        @Html.Raw(str)
+        <script src="~/js/lib/client.js"></script>
+    }
 }

@@ -1,3 +1,7 @@
 ﻿@{
     Layout = "_Layout";
+
+    if (User.IsInRole("Admin") && (Context.Request.Path.Value?.StartsWith("/Admin") ?? false))
+        Layout = "_AdminLayout"; 
+
 }

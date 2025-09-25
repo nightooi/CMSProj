@@ -11,10 +11,10 @@ namespace ContentDatabase.Model
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public Guid Id { get; }
         [ForeignKey(nameof(PageComponent.Id))]
-        public Guid PageComponentId { get; set; }
+        public Guid? PageComponentId { get; set; }
         [ForeignKey(nameof(PageVersion.Id))]
-        public Guid PageVersionId { get; set; }
-        public ComponentMarkup PayLoad { get; set; }
+        public Guid? PageVersionId { get; set; }
+        public ComponentMarkup? PayLoad { get; set; }
         [MaxLength(1000)]
         //Use Name of Author, Component Position and descriptive Name and Version
         [Required] public string ComponentName { get; set; }
@@ -26,8 +26,8 @@ namespace ContentDatabase.Model
         public string? JsBodyTags { get; set; }
         [DatabaseGenerated(DatabaseGeneratedOption.Computed)]
         public int? Version { get; set; }
-        public PageVersion PageVersion { get; set; } = null!;
-        public PageComponent PageComponent { get; set; } = null!;
+        public PageVersion? PageVersion { get; set; } = null!;
+        public PageComponent? PageComponent { get; set; } = null!;
         public ICollection<Assets>? Assets { get; set; } = new List<Assets>();
         public string? OtherHeaders { get; set; }
     }

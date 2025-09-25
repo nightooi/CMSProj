@@ -18,7 +18,7 @@ namespace CMSProj.SubSystems.BackGroundServices.UrlUpdate
 
         protected async override Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            var timer = new PeriodicTimer(TimeSpan.FromMinutes(5));
+            var timer = new PeriodicTimer(TimeSpan.FromMinutes(1));
             while(await timer.WaitForNextTickAsync(stoppingToken))
             {
                 using (var scope = _scopeFactory.CreateScope())
