@@ -1,4 +1,5 @@
 ﻿using CMSProj.DataLayer.PageServices.Repo;
+using CMSProj.Model;
 using CMSProj.SubSystems.Publishing;
 
 using Microsoft.AspNetCore.Authorization;
@@ -14,24 +15,23 @@ namespace CMSProj.Controllers
         private readonly ILogger<AdminController> _logger;
         private readonly DataLayer.PageServices.Repo.IPageManager _cmsRepo;
         private readonly IContentBuilder _builder;
-        private readonly ICounterModelFactory _counterFactory;
         private readonly IWebHostEnvironment _env;
-        ICounterApi _counterApi;
-
+        private readonly ICounterApiManager _counter;
+        private readonly IContactManager _mgr;
         public AdminController(
             ILogger<AdminController> logger,
             DataLayer.PageServices.Repo.IPageManager pagerepo,
             IContentBuilder builder,
-            ICounterModelFactory counterfact, 
-            ICounterApi counterapi, 
-            IWebHostEnvironment env)
+            IWebHostEnvironment env, 
+            ICounterApiManager counter,
+            IContactManager mgr)
         {
             _logger = logger;
             _cmsRepo = pagerepo;
             _builder = builder;
-            _counterFactory = counterfact;
-            _counterApi = counterapi;
+            _counter = counter;
             _env = env;
+            _mgr = mgr;
         }
 
 
@@ -40,17 +40,24 @@ namespace CMSProj.Controllers
         [ApiExplorerSettings(IgnoreApi = true)]
         public async Task<IActionResult> RenderPageAdmin([FromRoute(Name = "pageGuid")] Guid pageGuid)
         {
-            //var key = HttpContext.Request?.Path.Value?.Trim('/') ?? "home";
-            //var count = await _counterApi.GetCountAsync(key) ?? 0;
-            //var result = _counterFactory.Create(key, count);
 
+            var result = await _counter.CurrentPageCounter(HttpContext);
+            //this aught to have been wrapped in a manager.
             var pageExcavation = await _cmsRepo.ScaffoldPageAsync(pageGuid, HttpContext.RequestAborted);
             var assets = _cmsRepo.CopyAssetsToServingDirectory(pageGuid, HttpContext.RequestAborted);
             var page = await _cmsRepo.ConstructCompletePageAsync(pageExcavation, pageGuid, HttpContext.RequestAborted);
             var content = _builder.BuildContent(page);
             ViewBag.RenderContent = content;
+            ViewBag.FormModel = new ContactFormVm();
 
-            return View();
+            return View(result);
+        }
+        [HttpGet]
+        [Authorize(Roles="Admin")]
+        public async Task<IActionResult> Index(CancellationToken ct)
+        {
+            var list = await _mgr.GetAllAsync(ct);
+            return View(list);
         }
         [HttpPost]
         [Authorize(Roles ="Admin")]
@@ -76,5 +83,15 @@ namespace CMSProj.Controllers
 
             return Created($"/public/{name}", new { url = $"/public/{name}" });
         }
+        [HttpPost]
+        [Authorize(Roles="Admin")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Remove(Guid id, CancellationToken ct)
+        {
+            await _mgr.RemoveAsync(id, ct);
+            return RedirectToAction(nameof(Index));
+        }
+        [HttpGet]
+        public IActionResult ContactFormPartial() => PartialView("ContactAdmin", new ContactFormVm());
     }
 }

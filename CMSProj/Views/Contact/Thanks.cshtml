@@ -1,0 +1,12 @@
+﻿@*
+    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
+*@
+@{
+    <section class="container my-4">
+        <h3>Saved</h3>
+        <p><strong>Name:</strong> @ViewBag.Name</p>
+        <p><strong>Queue #:</strong> @ViewBag.Position</p>
+        <p><strong>Id:</strong> @ViewBag.Id</p>
+        <a asp-controller="AdminContact" asp-action="Index" class="btn btn-outline-secondary">Admin List</a>
+    </section>
+}

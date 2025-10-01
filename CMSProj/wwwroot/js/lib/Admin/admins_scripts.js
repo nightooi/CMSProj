@@ -189,6 +189,7 @@
 
     function placeElem(elemp, elemc) {
         function moveIdToClass($el) {
+            $el.attr('draggable', true)
             const id = ($el.attr('id') || '').trim()
             if (id) {
                 $el.addClass(id).removeAttr('id');
@@ -417,6 +418,7 @@
         hookList.push(new CHook($(s(teAB)), addText));
         hookList.push(new CHook($(s(lAB)), addLink));
         hookList.push(new CHook($(s(iAB)), addImage));
+        hookList.push(new CHook($(s('#form-deff')), addForm));
         $(cl).attr('ran', 'no')
     })
 
@@ -680,6 +682,46 @@
     siteBuilderLoop();
     attachAdminElement()
     elementReAttachment();
+    (function () {
 
+        const draggable = document.querySelectorAll('.header-ul .draggable');
+        const wrappers = document.querySelectorAll('.header-ul .menu-list');
+
+        draggable.forEach(item => {
+            item.addEventListener('dragstart', () => item.classList.add('dragging'));
+            item.addEventListener('dragend', () => item.classList.remove('dragging'));
+        });
+
+        wrappers.forEach(wrapper => {
+            wrapper.addEventListener('dragover', ev => {
+                ev.preventDefault();
+                const after = getAfterByX(wrapper, ev.clientX);
+                const dragging = document.querySelector('.header-ul .draggable.dragging');
+                if (!dragging) return;
+                if (after == null) {
+                    wrapper.appendChild(dragging);
+                } else {
+                    wrapper.insertBefore(dragging, after);
+                }
+            });
+        });
+
+        function getAfterByX(wrapper, x) {
+            const others = [...wrapper.querySelectorAll('.draggable:not(.dragging)')];
+            return others.reduce((closest, el) => {
+                const r = el.getBoundingClientRect();
+                const offset = x - r.left - r.width / 2;
+                if (offset < 0 && offset > closest.offset) {
+                    return { offset, element: el };
+                } else {
+                    return closest;
+                }
+            }, { offset: Number.NEGATIVE_INFINITY, element: null }).element;
+        }
+
+    })();
+    function addForm() {
+        attachClientItem($('#form-deff'), () => { })
+    }
    });
 

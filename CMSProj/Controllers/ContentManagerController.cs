@@ -1858,7 +1858,29 @@ namespace CMSProj.Controllers
     {
         Task<int?> GetCountAsync(string key, CancellationToken ct = default);
     }
+    public interface ICounterApiManager
+    {
+        Task<PageCounterModel> CurrentPageCounter(HttpContext context);
+    }
+    public class CounterApiManager(ICounterApi api, ICounterModelFactory fact, ILogger<CounterApi> logger) : ICounterApiManager
+    {
+        ICounterApi _api = api;
+        ICounterModelFactory _fact = fact;
+        ILogger<CounterApi> _logger = logger;
 
+        public async Task<PageCounterModel> CurrentPageCounter(HttpContext context)
+        {
+            var key = context.Request?.Path.Value?.Trim('/').ToLower() ?? "home";
+            try {
+                var count = await _api.GetCountAsync(key.Remove(0, 6)) ?? 0;
+                return _fact.Create(key, count);
+            }catch(Exception exc)
+            {
+                _logger.LogError(exc, $"{nameof(CounterApiManager.CurrentPageCounter)}\t: Threw At: {DateTime.UtcNow}");
+                return _fact.Create("400: Service Unresponsive", 0);
+            }
+        }
+    }
     public interface ICounterModelFactory
     {
         PageCounterModel Create(string key, int count);
@@ -1915,6 +1937,7 @@ public static class CounterServices
         });
 
         services.AddSingleton<ICounterModelFactory, CounterModelFactory>();
+        services.AddScoped<ICounterApiManager, CounterApiManager>();
         return services;
     }
 }

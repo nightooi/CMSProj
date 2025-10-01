@@ -1,0 +1,44 @@
+﻿@using ContentDatabase.Model
+@*
+    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
+*@
+@{
+@model List<ContatUser>
+@addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
+
+<section class="container my-4">
+    <h2>Contacts</h2>
+    <table class="table table-sm table-striped">
+        <thead>
+            <tr>
+                <th>Created (UTC)</th>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Phone</th>
+                <th>Message</th>
+                <th>Id</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+        @foreach (var x in Model)
+        {
+            <tr>
+                <td>@x.CreatedUtc.ToString("u")</td>
+                <td>@x.Name</td>
+                <td>@x.Email</td>
+                <td>@x.PhoneNumber</td>
+                <td style="max-width:400px;word-break:break-word">@x.Message</td>
+                <td>@x.Id</td>
+                <td>
+                    <form asp-action="Remove" asp-controller="AdminContact" method="post" class="d-inline">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="id" value="@x.Id" />
+                        <button type="submit" class="btn btn-sm btn-danger">Remove</button>
+                    </form>
+                </td>
+            </tr>
+        }
+        </tbody>
+    </table>
+</section>}

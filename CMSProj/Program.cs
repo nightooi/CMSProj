@@ -19,6 +19,7 @@ using Microsoft.AspNetCore.Mvc.ViewFeatures;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using System.Diagnostics;
 using Microsoft.Extensions.FileProviders;
+using CMSProj.Model;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -46,7 +47,16 @@ builder.Services.AddPageManagement();
 builder.Services.AddContentContext(builder.Configuration.GetConnectionString("Default")!);
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddSingleton<IAdminAssetProvider, AdminAssetProvider>();
-
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowLocalhost", policy =>
+    {
+        policy.WithOrigins("http://localhost:5263", "https://localhost:7250")
+              .AllowAnyHeader()
+              .AllowAnyMethod();
+    });
+});
+builder.Services.AddContactFeature();
 builder.Services.AddDbContext<IdentityContext>(options => options.UseSqlServer(builder.Configuration.GetConnectionString("IdentityContextConnection")));
 
 builder.Services.AddDefaultIdentity<AdminUser>(options => options.SignIn.RequireConfirmedAccount = true)
@@ -65,7 +75,7 @@ builder.Services.ConfigureApplicationCookie(opts => {
 builder.Services.AddDynmicRouteServices();
 builder.Services.AddRoutesServices();
 builder.Services.AddPageServices();
-builder.Services.AddCmsSeeders();
+//builder.Services.AddCmsSeeders();
 builder.Services.AddAuthenticationCore();
 builder.Services.AddAuthorizationCore();
 builder.Services.AddAuthorizationPolicyEvaluator();
@@ -97,7 +107,7 @@ app.UseStaticFiles(new StaticFileOptions
     RequestPath = "/public"
 });
 app.UseRouting();
-
+app.UseCors("AllowLocalhost");
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapRazorPages();
@@ -139,6 +149,9 @@ app.MapControllers();
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
+app.MapControllerRoute(
+    name: "default",
+    pattern: "{controller=AdminContact}/{action=Index}/{id?}");
 app.MapDynamicControllerRoute<RouteTransformer>("{**slug}");
 //await app.Services.SeedRolesAndAdminAsync();
 app.Run();

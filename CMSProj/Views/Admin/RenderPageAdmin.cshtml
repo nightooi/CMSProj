@@ -1,7 +1,7 @@
-﻿@using CMSProj.SubSystems.Publishing
+﻿@model PageCounterModel
+@using CMSProj.Model
+@using CMSProj.SubSystems.Publishing
 @using CMSProj.Controllers
-
-@inject ICounterApi CounterApi
 @inject ICounterModelFactory CounterFactory
 @inject IMenuManger Manager
 
@@ -41,8 +41,7 @@
     </div>
     <div class="menu-row" id="menuRow">
         <ul class="menu-list"></ul>
-    </div>
-    <div class="container py-3 position-relative" id="heading-def">
+    </div> <div class="container py-3 position-relative" id="heading-def">
         <div class="container-fluid px-2 my-3">
             <div class="card card-body shadow-sm position-relative">
                 <h1 class="mb-0 target">Heading</h1>
@@ -56,6 +55,7 @@
             </div>
         </div>
     </div>
+    @await Html.PartialAsync("ContactAdmin", new ContactFormVm())
     <div id="image-def">
         <div class="card card-body shadow-sm position-relative">
             <form asp-controller="Admin" id="uploadForm" asp-action="ImageUpload" method="post" enctype="multipart/form-data">
@@ -108,10 +108,11 @@
     <div class="position-sticky top-0 bg-body border-bottom position-relative adminelem" id="component-manager">
         <div class="d-flex justify-content-center gap-2 py-2">
             <button class="btn btn-primary" id="add-heading ">+H</button>
-            <button class="btn btn-success" id="add-text     ">+Text</button>
-            <button class="btn btn-info" id="add-link     ">+Link</button>
-            <button class="btn btn-warning" id="add-ima      ">+Image</button>
-            <button class="btn btn-dark" id="add-nav      ">+Nav</button>
+            <button class="btn btn-success" id="add-text">+Text</button>
+            <button class="btn btn-info" id="add-link">+Link</button>
+            <button class="btn btn-warning" id="add-ima">+Image</button>
+            <button class="btn btn-dark" id="add-nav">+Nav</button>
+            <button class="btn btn-danger" id="add-form">+form</button>
         </div>
     </div>
     <div class="d-flex gap-2 adminelem" id="nav-edit-activate">
@@ -143,7 +144,7 @@
     </div>
 </div>
 
-<div class="col" id="clientArea">
+<div class="col container" id="clientArea">
     @{
         var menu = await Manager.RetrieveMenuAsync();
         <header @NavModel.attrib =@menu.Id>
@@ -156,8 +157,19 @@
     }
 </div>
 
-<footer>
-</footer>
+<footer class="d-flex flex-wrap justify-content-between align-items-center py-3 my-4 border-top bg-dark"> 
+    <div class="col-md-4 d-flex align-items-center"> 
+        <span class="mb-3 mb-md-0 text-body-secondary">© 2025 Company, Inc</span>
+    </div>
+    <ul class="nav col-md-4 justify-content-end list-unstyled d-flex">
+        <li class="ms-3">
+            <p class="text-info"> @Model.Key</p>
+    </li>
+    <li class="ms-3">
+        <p class="text-light" href="#">@Model.Count</p>
+    </li> 
+    </ul>
+ </footer>
 
 <div id="cms-status" class="cms-status d-none">
     <span id="cms-status-text">Ready</span>

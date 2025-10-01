@@ -26,9 +26,10 @@
 
 @section Scripts{
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+    <script src="~/js/lib/client.js" asp-append-version="true"></script>
+    <partial name="_ValidationScriptsPartial" />
     @foreach(var str in Model.InjectScripts())
     {
         @Html.Raw(str)
-        <script src="~/js/lib/client.js"></script>
     }
 }

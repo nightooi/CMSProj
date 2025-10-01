@@ -8,12 +8,13 @@ using CMSProj.DataLayer.PageServices.Repo;
 using CMSProj.IdentityData.Models;
 using CMSProj.SubSystems.Publishing;
 
+using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Win32.SafeHandles;
 
 namespace CMSProj.Controllers
 {
-
+    [EnableCors("AllowLocalhost")]
     [ApiExplorerSettings(IgnoreApi = true)]
     public class DynamicPageController : Controller
     {
@@ -26,7 +27,7 @@ namespace CMSProj.Controllers
             _cmsRepo = repo;
             _builder = builder;
         }
-
+        [EnableCors("AllowLocalhost")]
         [ApiExplorerSettings(IgnoreApi = true)]
         public async Task<IActionResult> RenderPage([FromRoute(Name = "pageGuid")] string pageGuid, CancellationToken token)
         {
@@ -40,7 +41,6 @@ namespace CMSProj.Controllers
         }
 
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
-
         public IActionResult Error()
         {
             return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });

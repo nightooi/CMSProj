@@ -322,6 +322,89 @@ namespace ContentDatabase.Migrations
                     b.ToTable("ComponentMarkups");
                 });
 
+            modelBuilder.Entity("ContentDatabase.Model.ContatUser", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("Message")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("PhoneNumber")
+                        .HasMaxLength(14)
+                        .HasColumnType("nvarchar(14)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Id");
+
+                    b.ToTable("ContacUsers");
+                });
+
+            modelBuilder.Entity("ContentDatabase.Model.Counter", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("Count")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Page")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Page")
+                        .IsUnique();
+
+                    b.ToTable("Counters");
+                });
+
+            modelBuilder.Entity("ContentDatabase.Model.CounterUpdate", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<Guid>("CounterId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("LogMessage")
+                        .IsRequired()
+                        .HasMaxLength(400)
+                        .HasColumnType("nvarchar(400)");
+
+                    b.Property<DateTime>("RequestTime")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CounterId");
+
+                    b.ToTable("CounterUpdates");
+                });
+
             modelBuilder.Entity("ContentDatabase.Model.Page", b =>
                 {
                     b.Property<Guid>("Id")
@@ -694,6 +777,17 @@ namespace ContentDatabase.Migrations
                     b.Navigation("CreationAuthor");
                 });
 
+            modelBuilder.Entity("ContentDatabase.Model.CounterUpdate", b =>
+                {
+                    b.HasOne("ContentDatabase.Model.Counter", "Counter")
+                        .WithMany("UpdateLog")
+                        .HasForeignKey("CounterId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Counter");
+                });
+
             modelBuilder.Entity("ContentDatabase.Model.Page", b =>
                 {
                     b.HasOne("ContentDatabase.Model.Author", "CreationAuthor")
@@ -818,6 +912,11 @@ namespace ContentDatabase.Migrations
             modelBuilder.Entity("ContentDatabase.Model.ComponentMarkup", b =>
                 {
                     b.Navigation("Pages");
+                });
+
+            modelBuilder.Entity("ContentDatabase.Model.Counter", b =>
+                {
+                    b.Navigation("UpdateLog");
                 });
 
             modelBuilder.Entity("ContentDatabase.Model.Page", b =>

@@ -1,0 +1,38 @@
+﻿@using CMSProj.Model
+@*
+    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
+*@
+@model ContactFormVm
+@addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
+
+<section class="container my-4" id="form-deff">
+    <h2>Contact</h2>
+    <form asp-controller="Contact" asp-action="Create" method="post" class="border p-3">
+        @Html.AntiForgeryToken()
+        <div class="mb-2">
+            <label asp-for="Email"></label>
+            <input asp-for="Email" class="form-control" />
+            <span asp-validation-for="Email" class="text-danger"></span>
+        </div>
+        <div class="mb-2">
+            <label asp-for="PhoneNumber"></label>
+            <input asp-for="PhoneNumber" class="form-control" />
+            <span asp-validation-for="PhoneNumber" class="text-danger"></span>
+        </div>
+        <div class="mb-2">
+            <label asp-for="Name"></label>
+            <input asp-for="Name" class="form-control" />
+            <span asp-validation-for="Name" class="text-danger"></span>
+        </div>
+        <div class="mb-2">
+            <label asp-for="Message"></label>
+            <textarea asp-for="Message" rows="5" class="form-control"></textarea>
+            <span asp-validation-for="Message" class="text-danger"></span>
+        </div>
+        <button type="submit" class="btn btn-primary">Send</button>
+    </form>
+</section>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

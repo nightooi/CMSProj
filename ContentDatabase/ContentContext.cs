@@ -2,6 +2,7 @@
 
 using Microsoft.EntityFrameworkCore;
 
+using System.Diagnostics.Metrics;
 using System.Runtime.InteropServices;
 
 namespace ContentDatabase
@@ -27,6 +28,9 @@ namespace ContentDatabase
         public DbSet<PublishedPageSlug> PublishedPages { get; set; }
         public DbSet<AssetPageComponent> AssetComponentJoinTable { get; set; }
         public DbSet<AuthoredAssetJoin> AssetAuthoredJoinTable { get; set; }
+        public DbSet<Counter> Counters { get; set; }
+        public DbSet<CounterUpdate> CounterUpdates { get; set; }
+        public DbSet<ContatUser> ContacUsers { get; set; }
         public ContentContext(DbContextOptions<ContentContext> opts) : base(opts)
         {
 
@@ -109,6 +113,21 @@ namespace ContentDatabase
                 x=> x.HasOne<Assets>().WithMany().IsRequired(false).OnDelete(DeleteBehavior.Cascade),
                 y => y.HasOne<AuthoredComponent>().WithMany().IsRequired(false).OnDelete(DeleteBehavior.NoAction),
                 z => z.HasAlternateKey(x=> x.Asset));
+
+            modelBuilder.Entity<Counter>(e =>
+            {
+                e.HasKey(x => x.Id);
+                e.Property(x => x.Page).IsRequired().HasMaxLength(200);
+                e.HasIndex(x => x.Page).IsUnique();
+                e.Property(x => x.Count).IsRequired();
+                e.HasMany(x => x.UpdateLog).WithOne(x => x.Counter).HasForeignKey(x => x.CounterId).OnDelete(DeleteBehavior.Cascade);
+            });
+            modelBuilder.Entity<CounterUpdate>(e =>
+            {
+                e.HasKey(x => x.Id);
+                e.Property(x => x.RequestTime).IsRequired();
+                e.Property(x => x.LogMessage).HasMaxLength(400);
+            });
         }
     }
 }

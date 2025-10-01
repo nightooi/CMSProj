@@ -5,7 +5,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace ContentDatabase.Model
 {
-    [Index(nameof(Url), IsUnique =true)]
+    [Microsoft.EntityFrameworkCore.Index(nameof(Url), IsUnique =true)]
     [PrimaryKey(nameof(Id))]
     public class Assets : CreationDetails, Id
     {
