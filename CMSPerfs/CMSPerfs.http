@@ -1,6 +1,0 @@
-@CMSPerfs_HostAddress = http://localhost:5010
-
-GET {{CMSPerfs_HostAddress}}/weatherforecast/
-Accept: application/json
-
-###
