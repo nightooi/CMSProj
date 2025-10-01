@@ -1,4 +1,5 @@
-﻿using CMSProj.DataLayer.PageServices;
+﻿using CMSProj.Controllers;
+using CMSProj.DataLayer.PageServices;
 using CMSProj.DataLayer.PageServices.AdapterFactories;
 using CMSProj.DataLayer.PageServices.Components;
 using CMSProj.DataLayer.PageServices.Repo;
@@ -14,9 +15,12 @@ namespace CMSProj.DataLayer.ServiceRegistration
             collection.AddScoped<IDatalayerFactory<PageAdapter, ContentDatabase.Model.Page>, PageAdapterFactory>();
             collection.AddScoped<IDatalayerFactory<ScaffoldAdapter, ContentDatabase.Model.PageTemplate>, ScaffoldAdapterFactory>();
             collection.AddScoped<IDatalayerFactory<AssetAdapter, ContentDatabase.Model.Assets>, AssetFactory>();
-            collection.AddScoped<IPageRepository, PageRepository>();
-            collection.AddScoped<IPublishedPageRetrieval, PageRetrieval>();
-            collection.AddScoped<IContentExcavationService<ScaffoldAdapter>, ScaffoldingRetrievalService>();
+            collection.AddScoped<IPageManager, PublicationManger>();
+            collection.AddScoped<IPublishedPageRepository, PublishedPageRepo>();
+            collection.AddScoped<IContentExcavationService<ScaffoldAdapter>, ScaffoldingManager>();
+            collection.AddSingleton<IMenuCreator, MenuCreator>();
+            collection.AddScoped<IMenuManger, MenuManager>();
+            collection.AddScoped<IComponentsRepo, ComponentRepo>();
             collection.AddTransient<IContentBuilder, ContentBuilder>();
             collection.AddTransient<IRenderContent, RenderContent>();
             return collection;

@@ -18,6 +18,7 @@ using CMSProj.SubSystems.Identity;
 using Microsoft.AspNetCore.Mvc.ViewFeatures;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using System.Diagnostics;
+using Microsoft.Extensions.FileProviders;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -27,6 +28,7 @@ builder.WebHost.ConfigureKestrel(x => {
     //since we swallow literally everything and regex it, this is a possible ddos vector.
     x.Limits.MaxRequestLineSize = 2043;
 });
+builder.Configuration.AddJsonFile(Path.Combine(AppContext.BaseDirectory, "runtimevars.json"), true, true);
 // Add services to the container.
 builder.Services.AddRazorPages();
 builder.Services.AddAuthorization(opts =>
@@ -43,7 +45,6 @@ builder.Services.AddExistingRoutesHandler();
 builder.Services.AddPageManagement();
 builder.Services.AddContentContext(builder.Configuration.GetConnectionString("Default")!);
 builder.Services.AddHttpContextAccessor();
-
 builder.Services.AddSingleton<IAdminAssetProvider, AdminAssetProvider>();
 
 builder.Services.AddDbContext<IdentityContext>(options => options.UseSqlServer(builder.Configuration.GetConnectionString("IdentityContextConnection")));
@@ -64,10 +65,11 @@ builder.Services.ConfigureApplicationCookie(opts => {
 builder.Services.AddDynmicRouteServices();
 builder.Services.AddRoutesServices();
 builder.Services.AddPageServices();
-//builder.Services.AddCmsSeeders();
+builder.Services.AddCmsSeeders();
 builder.Services.AddAuthenticationCore();
 builder.Services.AddAuthorizationCore();
 builder.Services.AddAuthorizationPolicyEvaluator();
+builder.Services.AddPageCounters(builder.Configuration);
 
 var app = builder.Build();
 
@@ -89,6 +91,11 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseStaticFiles();
+app.UseStaticFiles(new StaticFileOptions
+{
+    FileProvider = new PhysicalFileProvider(Path.Combine(app.Environment.WebRootPath, "public")),
+    RequestPath = "/public"
+});
 app.UseRouting();
 
 app.UseAuthentication();

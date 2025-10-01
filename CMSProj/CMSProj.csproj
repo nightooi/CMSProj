@@ -47,6 +47,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Include="DataLayer\PageServices\PublicationManager.cs" />
     <None Include="wwwroot\fe5e2e0b-2aeb-4221-8f05-1740089c6c8c\css\style.css" />
     <None Include="wwwroot\fe5e2e0b-2aeb-4221-8f05-1740089c6c8c\Index.html" />
     <None Include="wwwroot\fe5e2e0b-2aeb-4221-8f05-1740089c6c8c\js\scripts.js" />
@@ -57,6 +58,8 @@
     <Folder Include="wwwroot\46c4f891-9764-447d-8f85-d79cc78c8513\css\" />
     <Folder Include="wwwroot\46c4f891-9764-447d-8f85-d79cc78c8513\js\" />
     <Folder Include="wwwroot\a0d5cdec-cc29-4ab9-91fa-5eec9ba7820c\js\" />
+    <Folder Include="wwwroot\public\" />
+    <Folder Include="wwwroot\public\Admin\ImageUpload\" />
   </ItemGroup>
 
   <ItemGroup>

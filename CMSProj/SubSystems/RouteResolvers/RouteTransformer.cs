@@ -6,8 +6,8 @@ public class RouteTransformer : DynamicRouteValueTransformer
 {
     private static readonly Regex _slugPattern =
         new(@"^([a-z0-9\-\/]){1,200}$", RegexOptions.IgnoreCase | RegexOptions.Compiled);
-    private readonly IRouteRepository _routes;
-    public RouteTransformer(IRouteRepository repo) => _routes = repo;
+    private readonly IActiveRouteManager _routes;
+    public RouteTransformer(IActiveRouteManager repo) => _routes = repo;
 
 
 /// <summary>
@@ -18,7 +18,7 @@ public class RouteTransformer : DynamicRouteValueTransformer
 /// <param name="httpContext"></param>
 /// <param name="values"></param>
 /// <returns></returns>
-    public override async ValueTask<RouteValueDictionary> TransformAsync
+    public override async ValueTask<RouteValueDictionary?> TransformAsync
         (HttpContext httpContext,
         RouteValueDictionary values)
     {
@@ -30,10 +30,7 @@ public class RouteTransformer : DynamicRouteValueTransformer
         var match = _slugPattern.IsMatch(route);
 
         if (!match)
-            route = "NotFound";
-
-
-    
+            return (RouteValueDictionary?)null;
 
         //
         // this pattern works for simple implementations but will create issues with page versioning.
@@ -51,27 +48,29 @@ public class RouteTransformer : DynamicRouteValueTransformer
         // parameter to it and instantiate a scope where the db calls inside the Routerepo was done, since there's no defering
         // and the call to the db is evaluated immediately and the entities immediately deep copied it works.
         // 
-        var routeL = httpContext.RequestServices.GetRequiredService<IRouteRepository>();
-        Func<string, Task<Guid?>> func = (route) =>
-        {
-            return routeL.
-             GetPageGuidAsync(route,
-             httpContext.RequestAborted);
-        };
-
+        var routeL = httpContext.RequestServices.GetRequiredService<IActiveRouteManager>();
+        Guid? id = null;
         if (match && route.StartsWith("Admin"))
-            return new RouteValueDictionary()
+        {
+            id = await routeL.GetPageGuidAsync(route.Remove(0, 6), httpContext.RequestAborted);
+             return new RouteValueDictionary()
             {
                 ["controller"] = "Admin",
                 ["action"] = "RenderPageAdmin",
-                ["pageGuid"] = await func(route.Remove(0, 6))
+                ["pageGuid"] = id
             };
+            
+        }
+        id = await routeL.GetPageGuidAsync(route, httpContext.RequestAborted);
+
+        if (id is null)
+            return ((RouteValueDictionary?)null);
 
         return new RouteValueDictionary()
         {
             ["controller"] = "DynamicPage",
             ["action"] = "RenderPage",
-            ["pageGuid"] = await func(route)
+            ["pageGuid"] = id
         };
     }
 }

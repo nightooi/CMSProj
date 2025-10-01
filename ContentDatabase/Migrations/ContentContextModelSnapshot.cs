@@ -242,13 +242,13 @@ namespace ContentDatabase.Migrations
                     b.Property<string>("OtherHeaders")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<Guid>("PageComponentId")
+                    b.Property<Guid?>("PageComponentId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid>("PageVersionId")
+                    b.Property<Guid?>("PageVersionId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid>("PayLoadId")
+                    b.Property<Guid?>("PayLoadId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime>("Published")
@@ -531,10 +531,10 @@ namespace ContentDatabase.Migrations
                     b.Property<DateTime>("LastRevisionTime")
                         .HasColumnType("datetime2");
 
-                    b.Property<Guid>("PageId")
+                    b.Property<Guid?>("PageId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid>("PageTemplateId")
+                    b.Property<Guid?>("PageTemplateId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime>("Published")
@@ -662,7 +662,7 @@ namespace ContentDatabase.Migrations
                     b.HasOne("ContentDatabase.Model.PageComponent", "PageComponent")
                         .WithMany("AuthoredComponent")
                         .HasForeignKey("PageComponentId")
-                        .OnDelete(DeleteBehavior.NoAction);
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("ContentDatabase.Model.PageVersion", "PageVersion")
                         .WithMany("Components")
@@ -760,8 +760,7 @@ namespace ContentDatabase.Migrations
                     b.HasOne("ContentDatabase.Model.Page", "Page")
                         .WithMany("PageVersions")
                         .HasForeignKey("PageId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("ContentDatabase.Model.PageTemplate", "PageTemplate")
                         .WithMany("PageVersions")

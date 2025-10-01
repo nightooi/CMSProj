@@ -15,6 +15,7 @@ using System.Security.Cryptography.Xml;
 using NuGet.Packaging;
 using System.Runtime.InteropServices;
 using CMSProj.Controllers;
+using NuGet.Configuration;
 namespace CMSProj
 {
 
@@ -447,10 +448,11 @@ namespace CMSProj
                 LastRevisionTime = now,
                 RevisionAuthor = [systemAuthor]
             };
+            string accum = string.Empty;
             var headerPayload = new ComponentMarkup
             {
-                Markup = JsonSerializer.Serialize(c1MarkupObj),
-                Content = JsonSerializer.Serialize(c1Contents),
+                Markup = c1MarkupObj.Markup,
+                Content = c1Contents.Content.Aggregate(accum, (x, y)=> x +=y.Content),
                 Constructed = now,
                 Generated = now,
                 CopyRight = "© Example",
@@ -509,8 +511,8 @@ namespace CMSProj
             var defaultPayl1 = new ComponentMarkup
             {
                 Constructed = now,
-                Markup = JsonSerializer.Serialize(cmpc1.Markup),
-                Content = JsonSerializer.Serialize(cmpc1.Content),
+                Markup = cmpc1.Markup,
+                Content = cmpc1.Content,
                 Generated = now,
                 CopyRight = "© Example",
                 CopyRightDisclaimer = null,
@@ -523,8 +525,8 @@ namespace CMSProj
             var defaultPayl2 = new ComponentMarkup
             {
                 Constructed = now,
-                Markup = JsonSerializer.Serialize(cmpc2.Markup),
-                Content = JsonSerializer.Serialize(cmpc2.Content),
+                Markup = cmpc2.Markup,
+                Content = cmpc2.Content,
                 Generated = now,
                 CopyRight = "© Example",
                 CopyRightDisclaimer = null,
@@ -537,8 +539,8 @@ namespace CMSProj
             var defaultPayl3 = new ComponentMarkup
             {
                 Constructed = now,
-                Markup = JsonSerializer.Serialize(cmpc3.Markup),
-                Content = JsonSerializer.Serialize(cmpc3.Content),
+                Markup = cmpc3.Markup,
+                Content = cmpc3.Content,
                 Generated = now,
                 CopyRight = "© Example",
                 CopyRightDisclaimer = null,
@@ -551,8 +553,8 @@ namespace CMSProj
             var defaultPayl4 = new ComponentMarkup
             {
                 Constructed = now,
-                Markup = JsonSerializer.Serialize(cmpc4.Markup),
-                Content = JsonSerializer.Serialize(cmpc4.Content),
+                Markup = cmpc4.Markup,
+                Content = cmpc4.Content,
                 Generated = now,
                 CopyRight = "© Example",
                 CopyRightDisclaimer = null,
@@ -565,8 +567,8 @@ namespace CMSProj
             var defaultPayl5 = new ComponentMarkup
             {
                 Constructed = now,
-                Markup = JsonSerializer.Serialize(cmpc5.Markup),
-                Content = JsonSerializer.Serialize(cmpc5.Content),
+                Markup = cmpc5.Markup,
+                Content = cmpc5.Content,
                 Generated = now,
                 CopyRight = "© Example",
                 CopyRightDisclaimer = null,
@@ -592,8 +594,8 @@ namespace CMSProj
 
             var mainPayload = new ComponentMarkup
             {
-                Markup = JsonSerializer.Serialize(c2MarkupObj),
-                Content = JsonSerializer.Serialize(c2Contents),
+                Markup = "<p>Getting started</p>",
+                Content = "Getting started",
                 Constructed = now,
                 Generated = now,
                 Published = now,

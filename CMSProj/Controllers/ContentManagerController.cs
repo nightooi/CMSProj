@@ -10,8 +10,6 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.CodeAnalysis;
 using Microsoft.EntityFrameworkCore;
-
-using CMSProj.DataLayer.DatalayerExtensions;
 using System.ComponentModel.DataAnnotations;
 using System.Configuration;
 using System.Diagnostics.CodeAnalysis;
@@ -19,10 +17,12 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System.Runtime.CompilerServices;
+using CMSProj.Controllers;
+using System.Text;
+using System.Text.Json.Serialization.Metadata;
 
 namespace CMSProj.Controllers
 {
-
     public interface IDefaultPageCreator
     {
         Task<Page> CreateAsync(CancellationToken ct);
@@ -113,7 +113,7 @@ namespace CMSProj.Controllers
                 RevisionAuthor = new List<Author> { systemAuthor }
             };
 
-             var baseComponentHeader = new PageComponent
+            var baseComponentHeader = new PageComponent
             {
                 ComponentHtml = "<header class=\"navbar navbar-expand-lg navbar-dark bg-primary fixed-top\">\r\n \r\n</header>",
                 PageTemplate = defaultTemplate,
@@ -189,7 +189,7 @@ namespace CMSProj.Controllers
                 RevisionDiff = null,
                 RevisionAuthor = new List<Author> { systemAuthor }
             };
-    
+
             _db.PageTemplates.Add(defaultTemplate);
             _db.PageComponents.AddRange(baseComponentHeader, baseComponentBod1, baseComponentBod2, baseComponentBod3, baseComponentBod4);
 
@@ -199,11 +199,12 @@ namespace CMSProj.Controllers
             var c4 = "<div class=\"container\">\r\n            <h1 class=\"display-4\">Welcome to GenericCompany</h1>\r\n            <p class=\"lead\">Your one-stop shop for utterly versatile solutions.</p>\r\n            <a href=\"#services\" class=\"btn btn-primary btn-lg\">What we do</a>\r\n        </div>";
             var c5 = "<a class=\"navbar-brand\" href=\"#\">GenericCompany</a>\r\n        <button class=\"navbar-toggler\" type=\"button\" data-toggle=\"collapse\"\r\n                data-target=\"#mainNav\" aria-controls=\"mainNav\"\r\n                aria-expanded=\"false\" aria-label=\"Toggle navigation\">\r\n            <span class=\"navbar-toggler-icon\"></span>\r\n        </button>\r\n\r\n        <nav id=\"mainNav\" class=\"collapse navbar-collapse\">\r\n            <ul class=\"navbar-nav ml-auto\">\r\n                <li class=\"nav-item\"><a class=\"nav-link\" href=\"#about\">About</a></li>\r\n                <li class=\"nav-item\"><a class=\"nav-link\" href=\"#services\">Services</a></li>\r\n                <li class=\"nav-item\"><a class=\"nav-link\" href=\"#contact\">Contact</a></li>\r\n            </ul>\r\n        </nav>";
 
+            var cmpc5 = IComponentMarkupFactory.Create(c5);
+
             var cmpc1 = IComponentMarkupFactory.Create(c1);
             var cmpc2 = IComponentMarkupFactory.Create(c2);
             var cmpc3 = IComponentMarkupFactory.Create(c3);
             var cmpc4 = IComponentMarkupFactory.Create(c4);
-            var cmpc5 = IComponentMarkupFactory.Create(c5);
 
             var defaultPayl1 = NewPayload(cmpc1, systemAuthor, now);
             var defaultPayl2 = NewPayload(cmpc2, systemAuthor, now);
@@ -318,9 +319,9 @@ namespace CMSProj.Controllers
     {
         public static IServiceCollection AddPageManagement(this IServiceCollection collection)
         {
-            collection.AddScoped<IPageManager, PageManager>();
+            collection.AddScoped<IPageContentManager, PageContentManager>();
             collection.AddScoped<ISlugFactory, SlugFactory>();
-            collection.AddScoped<IDefaultsRetriever, DefaultsCreator>();
+            collection.AddScoped<IDefaultsRepo, DefaultsCreator>();
             collection.AddScoped<IDefaultPageCreator, DefaultPageCreator>();
             collection.AddScoped<ISubComponentManager, SubComponentManager>();
 
@@ -334,12 +335,12 @@ namespace CMSProj.Controllers
     public class ContentManagerController : ControllerBase
     {
 
-        private IPageManager _pageManager { get; }
+        private IPageContentManager _pageManager { get; }
         private ILogger<ContentManagerController> _logger { get; }
         private ISubComponentManager _subManager { get; } // <-- add
 
         public ContentManagerController(
-            IPageManager pageManager,
+            IPageContentManager pageManager,
             ILogger<ContentManagerController> logger,
             ISubComponentManager subManager) // <-- add
         {
@@ -372,7 +373,7 @@ namespace CMSProj.Controllers
 
             if (!ModelState.IsValid)
                 return UnprocessableEntity(ModelState);
-            
+
             _logger.LogInformation($"{User.Identity?.Name ?? "defaultAdmin"} Issued Page Creation: {DateTime.UtcNow}");
             var res = _pageManager.CreatePageAsync(page, HttpContext.RequestAborted);
             await res;
@@ -406,7 +407,7 @@ namespace CMSProj.Controllers
             _logger.LogCritical($"Server Failed to create resource but did not throw en Error! Time: {DateTime.UtcNow}");
             return StatusCode(500);
         }
-        
+
         [Authorize(Roles = "Admin")]
         [HttpDelete]
         [ProducesResponseType(StatusCodes.Status200OK)]
@@ -473,11 +474,11 @@ namespace CMSProj.Controllers
 
             return StatusCode(501, new
             {
-                    request = nameof(ContentManagerController),
-                    action = nameof(ContentManagerController.DeletePage),
-                    result_action = res,
-                    url = page.Url,
-                    message = $"Internal Error"
+                request = nameof(ContentManagerController),
+                action = nameof(ContentManagerController.DeletePage),
+                result_action = res,
+                url = page.Url,
+                message = $"Internal Error"
             });
         }
 
@@ -500,7 +501,7 @@ namespace CMSProj.Controllers
             int iterator = 0;
             //lets hope for no deadlocks
             var updates = await _pageManager.UpdatePageAsync(page, HttpContext.RequestAborted);
-            
+
             var totalRes = DBActionResult.Succeded;
             try
             {
@@ -524,7 +525,7 @@ namespace CMSProj.Controllers
                     result = updates
                 });
             }
-            catch(Exception exc)
+            catch (Exception exc)
             {
                 _logger.LogError(exc, exc.Message);
 
@@ -544,7 +545,7 @@ namespace CMSProj.Controllers
                     result = new()
                     {
                         result = DBActionResult.Error,
-                        value_result =string.Empty
+                        value_result = string.Empty
                     }
                 });
             }
@@ -558,7 +559,7 @@ namespace CMSProj.Controllers
                 processed = list
             });
         }
-        [Route("/SubComp")]
+        [Route("SubComp")]
         [Authorize(Roles = "Admin")]
         [HttpPatch]
         [ProducesResponseType(StatusCodes.Status200OK)]
@@ -566,7 +567,7 @@ namespace CMSProj.Controllers
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(StatusCodes.Status422UnprocessableEntity)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-        public async Task<IActionResult> EditSubComponent(SubComponentEdit edit)
+        public async Task<IActionResult> EditSubComponent([FromBody]SubComponentEdit edit)
         {
             if (User is null || !User.IsInRole("Admin"))
                 return Unauthorized();
@@ -590,6 +591,7 @@ namespace CMSProj.Controllers
                     EditChoice.Add => _subManager.AddSubComponentAsync(edit, HttpContext.RequestAborted),
                     EditChoice.Remove => _subManager.DeleteSubComponentAsync(edit, HttpContext.RequestAborted),
                     EditChoice.Edit => _subManager.EditSubComponentAsync(edit, HttpContext.RequestAborted),
+                    EditChoice.Menu => _subManager.EditSubComponentAsync(edit, HttpContext.RequestAborted),
                     _ => Task.FromResult(IUpdateResultCreator.Failed())
                 };
 
@@ -676,10 +678,12 @@ namespace CMSProj.Controllers
     public class SubComponentManager : ISubComponentManager
     {
         private readonly ContentContext _ctx;
+        private readonly IMenuManger _menumgr;
 
-        public SubComponentManager(ContentContext ctx)
+        public SubComponentManager(ContentContext ctx, IMenuManger menumgr)
         {
             _ctx = ctx;
+            _menumgr = menumgr;
         }
 
         public Task<UpdateResults> AddSubComponentAsync(SubComponentEdit edit, CancellationToken ct)
@@ -703,6 +707,9 @@ namespace CMSProj.Controllers
             if (ct.IsCancellationRequested)
                 return IUpdateResultCreator.Cancelled(edit.value);
 
+            if (edit.Choice.HasFlag(EditChoice.Menu))
+                return await _menumgr.EditMenuAsync(edit.value);
+         
             var slug = await IRequestContext.GetLoadedSlug(_ctx, edit.url);
             if (slug is null)
                 return IUpdateResultCreator.SlugNull();
@@ -802,20 +809,22 @@ namespace CMSProj.Controllers
     }
     public interface IUpdateResultCreator
     {
-        public static UpdateResults SlugNull() 
+        public static UpdateResults SlugNull()
             => new() { result = DBActionResult.Error };
-        public static UpdateResults Ok(string value) 
+        public static UpdateResults Ok(string value)
             => new() { result = DBActionResult.Succeded, value_result = value };
-        public static UpdateResults Cancelled(string? value) 
+        public static UpdateResults Cancelled(string? value)
             => new() { result = DBActionResult.Cancelled, value_result = value ?? string.Empty };
-        public static UpdateResults Failed() 
+        public static UpdateResults Failed()
             => new() { result = DBActionResult.Failed };
-        public static UpdateResults InternalError(string? value) 
-            => new() { 
+        public static UpdateResults Failed(string reason)
+            => new() { result = DBActionResult.Failed, value_result = reason };
+        public static UpdateResults InternalError(string? value)
+            => new() {
                 value_result = value ?? string.Empty, result = DBActionResult.Error };
         public static UpdateResults NotFound(string? value = null)
-            => new() { 
-                result = DBActionResult.NotFound, value_result = value ?? string.Empty }; 
+            => new() {
+                result = DBActionResult.NotFound, value_result = value ?? string.Empty };
     }
 
     public static class DBExtensions
@@ -831,7 +840,18 @@ namespace CMSProj.Controllers
                 .Include(x => x.PageVersion)
                 .ThenInclude(x => x.PageTemplate)
                 .Include(x => x.PageVersion)
-                .ThenInclude(x => x.Components);
+                .ThenInclude(x => x.Components)
+                .ThenInclude(x => x.PayLoad);
+        }
+        public static IQueryable<PublishedPageSlug> WithCompAndVersion(this IQueryable<PublishedPageSlug> slug)
+        {
+            return slug
+                .Include(x => x.PageVersion)
+                .ThenInclude(x => x.PageTemplate)
+                .ThenInclude(x => x.PageComponents)
+                .Include(x => x.PageVersion)
+                .ThenInclude(x => x.Components)
+                .ThenInclude(x => x.PayLoad);
         }
 
         // NEW: keep parity with existing call sites
@@ -851,7 +871,6 @@ namespace CMSProj.Controllers
             return await ctx
                 .PublishedPages
                 .Where(x => x.Slug.Slug == path)
-                .WithLoadedPage()
                 .WithLoadedPageVersion()
                 .AsSplitQuery()
                 .SingleOrDefaultAsync();
@@ -870,17 +889,17 @@ namespace CMSProj.Controllers
             /// 0:Add, 1:Remove, 2, Edit
             /// </summary>
             [Required]
-            [Range(0,2)]
-            
+            [Range(0, 2)]
+
             [JsonConverter(typeof(JsonStringEnumConverter))]
-            [AllowedValues(EditChoice.Add, EditChoice.Remove, EditChoice.Edit)]
+            [AllowedValues(EditChoice.Add, EditChoice.Remove, EditChoice.Edit, EditChoice.Menu)]
             public EditChoice Choice { get; set; }
 
             /// <summary>
             /// 0:Text(html), 1:Header, 2:Image, 3:Link, 4:Css
             /// </summary>
             [Required]
-            [Range(0,4)]
+            [Range(0, 4)]
             public ContentType ContentType { get; set; }
 
             /// <summary>
@@ -926,10 +945,10 @@ namespace CMSProj.Controllers
         public Guid cmsedit_subcomponent { get; set; }
         [Required]
         [JsonConverter(typeof(JsonStringEnumConverter))]
-        [AllowedValues(EditChoice.Add, EditChoice.Remove, EditChoice.Edit)]
+        [AllowedValues(EditChoice.Add, EditChoice.Remove, EditChoice.Edit, EditChoice.Menu)]
         public EditChoice Choice { get; set; }
         [Required]
-        [MaxLength(2000)]
+        [MaxLength(20000)]
         public string value { get; set; }
     }
     public class PageUpdates
@@ -949,7 +968,7 @@ namespace CMSProj.Controllers
         public DBActionResult result { get; set; }
         public string value_result { get; set; } = string.Empty;
     }
-    public interface IPageManager
+    public interface IPageContentManager
     {
         public Task<DBActionResult> CreatePageAsync(PageDetails page, CancellationToken token);
         public Task<DBActionResult> DeletePageAsync(PageDetails page, CancellationToken token);
@@ -963,11 +982,228 @@ namespace CMSProj.Controllers
         public ContentDatabase.Model.PublishedPageSlug CreatePublished();
         public ContentDatabase.Model.PageSlug CreateSlug();
     }
-    public interface IDefaultsRetriever
+    public interface IDefaultsRepo
     {
         public Task<ContentDatabase.Model.Page> GetDefaultPageAsync();
     }
-    public class DefaultsCreator(ContentContext ctx) : IDefaultsRetriever
+    public interface IMenuCreator
+    {
+        public Task<Guid> GetGuid(ContentContext ctx);
+    }
+    public class MenuCreator(IServiceProvider prov, IConfiguration conf) : IMenuCreator
+    {
+        const string magic = "MagicGuid";
+        const string filename = "runtimevars.json";
+        private IServiceProvider _prov = prov;
+        private IConfiguration _conf = conf;
+        private Guid? magicGuid { get; set; } = null;
+        public async Task<Guid> GetGuid(ContentContext ctx)
+        {
+            if (magicGuid is null) await FileCheck(ctx);
+
+            if (magicGuid is null) await CreateMenu(ctx);
+
+            if (magicGuid is null) throw new ArgumentException("No MagicGuid, no MagicNav");
+
+            return magicGuid ?? new Guid();
+        }
+
+        private async Task FileCheck(ContentContext _ctx)
+        {
+            var res = _conf[magic];
+            Guid id;
+            if (res is null) return;
+            if(Guid.TryParse(res, out id))
+            {
+                if ((await _ctx.AuthoredComponents.SingleOrDefaultAsync(x=> x.Id == id)) is null)
+                {
+                    magicGuid = null;
+                    return;
+                }
+                magicGuid = id;
+            }
+        }
+
+        private async Task CreateMenu(ContentContext ctx)
+        {
+            var _ctx = ctx;
+            var autho = await _ctx.Authors.FirstAsync();
+            var auth = IAuthoredComponentFactory.Create();
+            var payl = IPayloadFactory.Create("<ul></ul>");
+            payl.CreationAuthor = autho;
+            _ctx.ComponentMarkups.Add(payl);
+            await _ctx.SaveChangesAsync();
+            auth.ComponentName = "main-header";
+            auth.CreationAuthor = autho;
+            auth.PayLoad = payl;
+            auth.PageComponent = null;
+            auth.PageVersion = null;
+            _ctx.AuthoredComponents.Add(auth);
+            await _ctx.SaveChangesAsync();
+            magicGuid = auth.Id;
+            using var stream = new FileStream(Path.Combine(AppContext.BaseDirectory, filename), FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.Read);
+            stream.SetLength(0);
+                await JsonSerializer.SerializeAsync<MagicDump>(stream, new MagicDump() { MagicGuid = magicGuid }, new JsonSerializerOptions() { WriteIndented=true});
+            await stream.FlushAsync();
+            stream.Close();
+            await stream.DisposeAsync();
+
+            ((IConfigurationRoot)_prov.GetRequiredService<IConfiguration>()).Reload();
+        }
+        class MagicDump
+        {
+            public Guid? MagicGuid { get; set; }
+        }
+    }
+    public interface IComponentsRepo
+    {
+        public AuthoredComponent GetComponent(Guid id);
+        public DBActionResult UpdateComponent(Guid id, string payload);
+        public Task<AuthoredComponent> GetComponentAsync(Guid id);
+        public Task<DBActionResult> UpdateComponentAsync(Guid id, string payload);
+    }
+    public interface IMenuManger
+    {
+        public Task<NavModel> RetrieveMenuAsync();
+        public Task<UpdateResults> EditMenuAsync(string content);
+    }
+    public class ComponentRepo(ContentContext ctx, ILogger<ComponentRepo> logger) : IComponentsRepo
+    {
+        private readonly ILogger<ComponentRepo> _logger = logger;
+        private readonly ContentContext _ctx = ctx;
+        public AuthoredComponent? GetComponent(Guid id)
+        {
+            return _ctx.AuthoredComponents
+                .Include(x=> x.PayLoad)
+                .SingleOrDefault(x => x.Id == id);
+        }
+
+        public async Task<AuthoredComponent?> GetComponentAsync(Guid id)
+        {
+            return await _ctx.AuthoredComponents
+                .Include(x=> x.PayLoad)
+                .SingleOrDefaultAsync(x => x.Id == id);
+        }
+
+        public DBActionResult UpdateComponent(Guid id, string payload)
+        {
+            var auth = _ctx.Authors.First();
+            var res = _ctx.AuthoredComponents.SingleOrDefault(x => x.Id == id);
+            if (res is null) return DBActionResult.NotFound;
+
+            var payl = IPayloadFactory.Create(payload);
+            payl.CreationAuthor = auth;
+            res.PayLoad = payl;
+            try
+            {
+                _ctx.Update(res);
+                _ctx.SaveChanges();
+            }
+            catch(Exception exc)
+            {
+                _logger.LogError(exc, "Threw when trying to save update of compoonent");
+                return DBActionResult.Error;
+            }
+            return DBActionResult.Succeded;
+        }
+
+        public async Task<DBActionResult> UpdateComponentAsync(Guid id, string payload)
+        {
+            var auth = await _ctx.Authors.FirstAsync();
+            var res = await _ctx.AuthoredComponents.SingleOrDefaultAsync(x => x.Id == id);
+            if (res is null) return DBActionResult.NotFound;
+
+            var payl = IPayloadFactory.Create(payload);
+            payl.CreationAuthor = auth;
+            res.PayLoad = payl;
+            try
+            {
+                _ctx.Update(res);
+                await _ctx.SaveChangesAsync();
+            }
+            catch(Exception exc)
+            {
+                _logger.LogError(exc, "Threw when trying to save update of compoonent");
+                return DBActionResult.Error;
+            }
+            return DBActionResult.Succeded;
+
+        }
+    }
+    public class MenuManager(IComponentsRepo repo, IMenuCreator mcr, ContentContext ctx) : IMenuManger
+    {
+        readonly IComponentsRepo _repo = repo;
+        readonly IMenuCreator _mcr = mcr;
+        readonly ContentContext _ctx = ctx;
+        public async Task<UpdateResults> EditMenuAsync(string content)
+        {
+            var mg = await _mcr.GetGuid(_ctx);
+            var ms = IAuthoredComponentFactory.Create();
+            ms.PayLoad = IPayloadFactory.Create(content);
+            try
+            {
+                var html = content;
+                HtmlAgilityPack.HtmlDocument doc = new HtmlDocument();
+                doc.LoadHtml(content);
+                var start = doc.DocumentNode.SelectSingleNode("/");
+                if(start.Attributes["data-cmsrootcompguid"] is not null)
+                {
+                    var node = doc.DocumentNode.SelectSingleNode("/*");
+                    html = node.OuterHtml;
+                }
+
+                var r = await _repo.UpdateComponentAsync(mg, html);
+                if (r.HasFlag(DBActionResult.Error)  ||
+                    r.HasFlag(DBActionResult.Failed) ||
+                    r.HasFlag(DBActionResult.NotFound))
+                    return IUpdateResultCreator.Failed();
+
+                return IUpdateResultCreator.Ok("Menu Updated");
+                
+            }
+            catch(Exception exc)
+            {
+                return IUpdateResultCreator.Failed();
+            }
+        }
+
+        public async Task<NavModel> RetrieveMenuAsync()
+        {
+            var mg = await _mcr.GetGuid(_ctx);
+            AuthoredComponent comp;
+            var mod = INavModelFactory.Create();
+            try
+            {
+                comp = _repo.GetComponent(mg);
+                mod.Content = comp.PayLoad.Markup;
+                mod.Id = comp.Id;
+            }
+            catch(Exception exc)
+            {
+                //likely should be some kind of default. but i guess an empty model is a default of sorts
+                return INavModelFactory.Create();
+            }
+            return mod;
+        }
+    }
+    public interface INavModelFactory
+    {
+        public static NavModel Create()
+        {
+            return new NavModel
+            {
+                Content = string.Empty,
+                Id = new Guid()
+            };
+        }
+    }
+    public class NavModel
+    {
+        public const string attrib = "data-cmsrootcompguid";
+        public Guid Id { get; set; }
+        public string Content { get; set; }
+    }
+    public class DefaultsCreator(ContentContext ctx) : IDefaultsRepo
     {
         private readonly ContentContext _ctx = ctx;
 
@@ -1018,17 +1254,17 @@ namespace CMSProj.Controllers
                 .Where(x => x.Slug.Slug == page);
         }
     }
-    public class PageManager : IPageManager
+    public class PageContentManager : IPageContentManager
     {
         private readonly ContentContext _ctx;
-        private readonly ILogger<PageManager> _logger;
+        private readonly ILogger<PageContentManager> _logger;
         private readonly ISlugFactory _slugfact;
-        private readonly IDefaultsRetriever _defaults;
+        private readonly IDefaultsRepo _defaults;
         private readonly IDefaultPageCreator _creator;
-        public PageManager(ContentContext ctx,
-            ILogger<PageManager> logger,
+        public PageContentManager(ContentContext ctx,
+            ILogger<PageContentManager> logger,
             ISlugFactory slugfact, 
-            IDefaultsRetriever defaults,
+            IDefaultsRepo defaults,
             IDefaultPageCreator creator)
         {
             _slugfact = slugfact;
@@ -1100,7 +1336,7 @@ namespace CMSProj.Controllers
 
         public async Task<UpdateResults> UpdatePageAsync(PageEdit page, [EnumeratorCancellation] CancellationToken token)
         {
-            var sl = page.Url.StartsWith("/") ? page.Url.Remove(0, 1) : page.Url;
+            var sl = page.Url.StartsWith('/') ? page.Url.Remove(0, 1) : page.Url;
             var slug = await  _ctx.PublishedPages
                 .PageSlugExistsExt(sl)
                 .LoadedTemplate()
@@ -1341,13 +1577,16 @@ namespace CMSProj.Controllers
                 comp.CreationAuthor = auth;
                 comp.SelfPageOrder = add.PageOrder;
                 comp.ComponentHtml = split[0];
-                comp.ChildOffset = split[0].Length - "</div>".Length;
+                if (split[0].Contains("<div>"))
+                    comp.ChildOffset = split[0].Length - "</div>".Length;
+
+                else comp.ChildOffset = split[0].Length - "</header>".Length;
 
 
-                slug.PageVersion!
-                    .PageTemplate!
-                    .PageComponents!
-                    .Add(comp);
+                    slug.PageVersion!
+                        .PageTemplate!
+                        .PageComponents!
+                        .Add(comp);
 
                 _ctx.Update(slug);
 
@@ -1446,7 +1685,7 @@ namespace CMSProj.Controllers
             html.LoadHtml(Temp);
 
             var parent = html.DocumentNode.
-                SelectSingleNode("/div");
+                SelectSingleNode("/div | /header");
 
             splitHtml[1] = parent.InnerHtml;
             parent.RemoveAllChildren();
@@ -1482,71 +1721,29 @@ namespace CMSProj.Controllers
                 Published = DateTime.UtcNow,
                 Constructed = DateTime.UtcNow,
                 CreationAuthor = new(),
-                Markup = JsonSerializer.Serialize<CLRComponentMarkup>(markup.Markup),
-                Content = JsonSerializer.Serialize<CLRComponentContent>(markup.Content),
+                Markup = markup.Markup,
+                Content = markup.Content,
             };
         }
     }
     public class CLRMerge
     {
-        public ContentDatabase.DeserliazationTypes.CLRComponentContent Content { get; set; }
-        public ContentDatabase.DeserliazationTypes.CLRComponentMarkup Markup { get; set; }
+        public string Content { get; set; }
+        public string Markup { get; set; }
     }
-       public interface IComponentMarkupFactory
+    public interface IComponentMarkupFactory
     {
         static CLRMerge Create(string html)
         {
             var doc = new HtmlAgilityPack.HtmlDocument();
             doc.LoadHtml(html);
-
             string copy = html;
 
-            List<CLRComponentContent.ContentDef> cList = [];
-            List<CLRComponentMarkup.ContentOffset> cOffset = [];
-
-
-            foreach (var item1 in doc.DocumentNode.Descendants().Where(x=> x.NodeType == HtmlNodeType.Element).ToList())
+            return new CLRMerge
             {
-                item1.SetAttributeValue("data-cmseditguid", Guid.NewGuid().ToString());
-            }
-            var str = doc.DocumentNode.OuterHtml;
-            var doc2 = new HtmlAgilityPack.HtmlDocument();
-            doc2.LoadHtml(str);
-
-            var nodes = doc2.DocumentNode.SelectNodes("/*[text()]");
-            var nodes2 = doc2.DocumentNode.SelectNodes("//*[text()]");
-            var clean = nodes.First().InnerText;
-
-            List<(string, int)> nodes3 = [];
-            foreach (var n in nodes2.OrderByDescending(x => x.InnerStartIndex)
-                .Where(x => x.InnerText != string.Empty))
-            {
-                string agg = string.Empty;
-                int i = 0;
-                int innerI = 0;
-                int cleanI = 0;
-                agg = n.InnerText;
-
-                if (nodes3.Count > 0 && (i = n.InnerText.IndexOf(nodes3.Last().Item1, StringComparison.Ordinal)) > -1)
-                    agg = n.InnerText.Remove(i, nodes3.Last().Item1.Length);
-
-                if ((innerI = str.IndexOf(agg, StringComparison.Ordinal)) > -1 && (cleanI = clean.IndexOf(agg)) > -1)
-                {
-                    nodes3.Add((agg, innerI));
-                    str = str.Remove(nodes3.Last().Item2, nodes3.Last().Item1.Length);
-                    clean = clean.Remove(cleanI, agg.Length);
-                }
-            }
-            CLRMerge item = new();
-            foreach(var n in nodes3)
-            {
-                var guid = Guid.NewGuid();
-                cList.Add(new() { Content = n.Item1, Id = guid });
-                cOffset.Add(new() { ContentId = guid, Offset = n.Item2 });
-            }
-            item.Content = new CLRComponentContent() { Content = cList };
-            item.Markup = new CLRComponentMarkup() { Content = cOffset, Markup = str, Id = Guid.NewGuid() };
-            return item;
+                Markup = html,
+                Content = doc.Text
+            };
         }
     }
     public interface IPageComponentFactory
@@ -1592,10 +1789,31 @@ namespace CMSProj.Controllers
                 Generated = DateTime.UtcNow,
             };
         }
+        static ContentDatabase.Model.AuthoredComponent Create(AuthoredComponent comp)
+        {
+             return new AuthoredComponent()
+            {
+                PageComponent = comp.PageComponent,
+                ComponentName = comp.ComponentName,
+                PageVersion = new(),
+                Version = 1,
+                PayLoad = new(),
+                Assets = comp.Assets,
+                Published = DateTime.UtcNow,
+                CssHeaderTags = comp.CssHeaderTags,
+                JsBodyTags = comp.JsBodyTags,
+                JsHeaderTags = comp.JsHeaderTags,
+                CreationAuthor =  comp.CreationAuthor,
+                Constructed = DateTime.UtcNow,
+                OtherHeaders = comp.OtherHeaders,
+                Generated = DateTime.UtcNow,
+            };
+
+        }
     }
 
     public enum ContentType { Text, Header, Image, Link, Css }
-    public enum EditChoice { Add, Remove, Edit }
+    public enum EditChoice { Add, Remove, Edit, Menu }
     public enum LinkType { button, anchor  }
 
     public class LinkInsertion
@@ -1635,4 +1853,68 @@ namespace CMSProj.Controllers
         string Value { get; set; }
     }
     public enum DBActionResult { Succeded, Failed, Error, NotFound, Cancelled }
+
+    public interface ICounterApi
+    {
+        Task<int?> GetCountAsync(string key, CancellationToken ct = default);
+    }
+
+    public interface ICounterModelFactory
+    {
+        PageCounterModel Create(string key, int count);
+    }
+
+    public sealed class PageCounterModel
+    {
+        public string Key { get; init; } = string.Empty;
+        public int Count { get; init; }
+        public DateTime AsOfUtc { get; init; } = DateTime.UtcNow;
+    }
+
+    public sealed class CounterApi : ICounterApi
+    {
+        private readonly HttpClient _http;
+        private readonly string _magic;
+
+        public CounterApi(HttpClient http, IConfiguration cfg)
+        {
+            _http = http;
+            _magic = cfg["Counter:MagicReadGuid"] ?? "8c6a2c4e-2e3a-4d77-9d7c-5f4a3b2c1d00";
+        }
+
+        public async Task<int?> GetCountAsync(string key, CancellationToken ct = default)
+        {
+            var url = $"/api/Counter?magic={Uri.EscapeDataString(_magic)}&key={Uri.EscapeDataString(key)}";
+            using var res = await _http.GetAsync(url, ct);
+            if (!res.IsSuccessStatusCode) return null;
+
+            var payload = await res.Content.ReadFromJsonAsync<CounterResponse>(cancellationToken: ct);
+            return payload?.count;
+        }
+
+        sealed class CounterResponse { public string? key { get; set; } public int count { get; set; } }
+    }
+}
+
+public sealed class CounterModelFactory : ICounterModelFactory
+{
+    public PageCounterModel Create(string key, int count) =>
+        new PageCounterModel { Key = key, Count = count, AsOfUtc = DateTime.UtcNow };
+}
+
+// DI extension
+public static class CounterServices
+{
+    public static IServiceCollection AddPageCounters(this IServiceCollection services, IConfiguration cfg)
+    {
+        services.AddHttpClient<ICounterApi, CounterApi>(client =>
+        {
+            var baseUrl = cfg["Counter:BaseUrl"]; 
+            if (!string.IsNullOrWhiteSpace(baseUrl))
+                client.BaseAddress = new Uri(baseUrl, UriKind.Absolute);
+        });
+
+        services.AddSingleton<ICounterModelFactory, CounterModelFactory>();
+        return services;
+    }
 }

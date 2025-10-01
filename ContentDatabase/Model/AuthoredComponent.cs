@@ -2,6 +2,7 @@
 
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Diagnostics.CodeAnalysis;
 
 namespace ContentDatabase.Model
 {
@@ -11,8 +12,10 @@ namespace ContentDatabase.Model
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public Guid Id { get; }
         [ForeignKey(nameof(PageComponent.Id))]
+        [AllowNull]
         public Guid? PageComponentId { get; set; }
         [ForeignKey(nameof(PageVersion.Id))]
+        [AllowNull]
         public Guid? PageVersionId { get; set; }
         public ComponentMarkup? PayLoad { get; set; }
         [MaxLength(1000)]
@@ -26,7 +29,9 @@ namespace ContentDatabase.Model
         public string? JsBodyTags { get; set; }
         [DatabaseGenerated(DatabaseGeneratedOption.Computed)]
         public int? Version { get; set; }
+        [AllowNull]
         public PageVersion? PageVersion { get; set; } = null!;
+        [AllowNull]
         public PageComponent? PageComponent { get; set; } = null!;
         public ICollection<Assets>? Assets { get; set; } = new List<Assets>();
         public string? OtherHeaders { get; set; }

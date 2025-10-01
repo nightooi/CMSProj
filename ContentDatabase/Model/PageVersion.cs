@@ -12,7 +12,7 @@ namespace ContentDatabase.Model
         [ForeignKey(nameof(Page.Id))]
         public Guid? PageId { get; set; }
         [ForeignKey(nameof(Page.Id))]
-        public Guid PageTemplateId { get; set; }
+        public Guid? PageTemplateId { get; set; }
         public int Version { get; set; }
         public Page? Page { get; set; } = null!;
         public PageTemplate PageTemplate { get; set; } = null!;

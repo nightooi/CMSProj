@@ -14,7 +14,6 @@ namespace CMSProj.DataLayer.PageServices.AdapterFactories
                 HeaderContents = $"{peripherals.HeaderContents}\n{peripherals.JsContents}",
                 JsContents = $"{peripherals.JsContents}",
                 ComponentHtml = [],
-                RenderChildOffsets = []
             };
 
             model.PageComponents.ExtractMarkupAndChildOffsetsExt(scaffold);

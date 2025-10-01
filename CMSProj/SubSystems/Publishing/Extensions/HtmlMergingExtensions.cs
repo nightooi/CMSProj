@@ -1,5 +1,7 @@
 using CMSProj.DataLayer.PageServices.Components;
 
+using Microsoft.CodeAnalysis.CSharp.Syntax;
+
 using System.Text;
 
 namespace CMSProj.SubSystems.Publishing.Extensions
@@ -8,11 +10,11 @@ namespace CMSProj.SubSystems.Publishing.Extensions
     {
         public static IEnumerable<string> MergeComponentWithScaffold(this ScaffoldAdapter adapter, IReadOnlyCollection<ContentComponent> component)
         {
-            var join = adapter.RenderChildOffsets.Join(component,
-                    x => x.ComponentGuid,
+            var join = adapter.ComponentHtml.Join(component,
+                    x => x.offset.ComponentGuid,
                     y => y.ScaffoldAdapterId,
                     (x, y) =>
-                    new { offset = x.RenderOffset, content = y.MergeComponent((x, y) => x)});
+                    new { offset = x.offset.RenderOffset, content = y.SimplifiedContent((x, y) => x)});
             // int i = 0;
             // foreach(var scaffold in adapter.ComponentHtml)
             // {
@@ -25,18 +27,21 @@ namespace CMSProj.SubSystems.Publishing.Extensions
             //     i++;
             // }
             var g = new Guid().ToString().Length + " data-cmsrootcompguid=".Length +2;
-            foreach(var element in join)
+            foreach(var element in join.ToList())
             {
                 var doc =new  HtmlAgilityPack.HtmlDocument();
                 var elem = adapter.ComponentHtml.Dequeue();
-
                 doc.LoadHtml(elem.html);
-                var node = doc.DocumentNode.SelectSingleNode("/*");
-                node.SetAttributeValue("data-cmsrootcompguid", elem.Guid.ToString());
-                var html = doc.DocumentNode.OuterHtml;
 
-                StringBuilder builder = new(html);
-                yield return builder.Insert(element.offset+g, element.content).ToString();
+                var child = new HtmlAgilityPack.HtmlDocument();
+                child.LoadHtml(element.content);
+
+                doc.DocumentNode.SelectSingleNode("//*").AppendChild(child.DocumentNode);
+                var node = doc.DocumentNode.SelectSingleNode("//*");
+
+                node.SetAttributeValue("data-cmsrootcompguid", elem.Guid.ToString());
+
+                yield return doc.DocumentNode.OuterHtml;
             }
         }
         public static IEnumerable<string> MergeContentWithComponent(this IReadOnlyCollection<ContentComponent> components)
@@ -48,7 +53,7 @@ namespace CMSProj.SubSystems.Publishing.Extensions
         {
             foreach(var component in components)
             {
-                yield return component.MergeComponent(func);
+                yield return component.SimplifiedContent(func);
             }
  
         }
@@ -62,7 +67,7 @@ namespace CMSProj.SubSystems.Publishing.Extensions
                 .OrderBy(x=> x.offset)
                 .ToArray();
 
-            StringBuilder val = new StringBuilder(component.Html.Markup);
+            StringBuilder val = new StringBuilder(component.HtmlMarkup);
             int i = 0;
             foreach(var item in join)
             {
@@ -70,6 +75,10 @@ namespace CMSProj.SubSystems.Publishing.Extensions
                 i++; 
             }
             return func(val.ToString(), component);
+        }
+        private static TResult SimplifiedContent<TResult>(this ContentComponent component, Func<string, ContentComponent, TResult> func)
+        {
+            return func(component.HtmlMarkup, component);
         }
     }
 }

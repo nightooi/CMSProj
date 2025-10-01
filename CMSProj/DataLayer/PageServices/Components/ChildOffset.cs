@@ -1,8 +1,4 @@
 ﻿namespace CMSProj.DataLayer.PageServices.Components
 {
-    public class ChildOffset
-    {
-        public Guid ComponentGuid { get; set; }
-        public int RenderOffset { get; set; }
-    }
+    public record ChildOffset(Guid ComponentGuid, int RenderOffset);
 }

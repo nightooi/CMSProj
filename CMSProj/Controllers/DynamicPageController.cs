@@ -18,9 +18,9 @@ namespace CMSProj.Controllers
     public class DynamicPageController : Controller
     {
         private readonly ILogger<DynamicPageController> _logger;
-        private readonly IPageRepository _cmsRepo;
+        private readonly DataLayer.PageServices.Repo.IPageManager _cmsRepo;
         private readonly IContentBuilder _builder;
-        public DynamicPageController(ILogger<DynamicPageController> logger, IPageRepository repo, IContentBuilder builder)
+        public DynamicPageController(ILogger<DynamicPageController> logger, DataLayer.PageServices.Repo.IPageManager repo, IContentBuilder builder)
         {
             _logger = logger;
             _cmsRepo = repo;

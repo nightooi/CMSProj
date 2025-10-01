@@ -7,8 +7,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CMSProj", "CMSProj\CMSProj.
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ContentDatabase", "ContentDatabase\ContentDatabase.csproj", "{662E78B3-C72C-42C1-A345-90477D3059CF}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CMSPerfs", "CMSPerfs\CMSPerfs.csproj", "{67F26626-B4EA-4E0E-90AF-E7AEAA8FEF57}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -23,10 +21,6 @@ Global
 		{662E78B3-C72C-42C1-A345-90477D3059CF}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{662E78B3-C72C-42C1-A345-90477D3059CF}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{662E78B3-C72C-42C1-A345-90477D3059CF}.Release|Any CPU.Build.0 = Release|Any CPU
-		{67F26626-B4EA-4E0E-90AF-E7AEAA8FEF57}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{67F26626-B4EA-4E0E-90AF-E7AEAA8FEF57}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{67F26626-B4EA-4E0E-90AF-E7AEAA8FEF57}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{67F26626-B4EA-4E0E-90AF-E7AEAA8FEF57}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

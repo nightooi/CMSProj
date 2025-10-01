@@ -1,5 +1,7 @@
-﻿<!DOCTYPE html>
+﻿@using CMSProj.Controllers
+<!DOCTYPE html>
 <html lang="en">
+@inject IMenuManger manager
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -10,6 +12,12 @@
     @RenderSection("Headers", false)
 </head>
 <body>
+    @{
+        var menu = await manager.RetrieveMenuAsync();
+    <header @NavModel.attrib=@menu.Id>
+        @Html.Raw(menu.Content)
+    </header>
+    }
 
     <partial name="_LoginPartial"/>
     @RenderBody()

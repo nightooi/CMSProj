@@ -10,8 +10,8 @@ namespace CMSProj.DataLayer.ServiceRegistration
         public static IServiceCollection AddRoutesServices(this IServiceCollection collection)
         {
             //IWorkResultOrchestrator<T> : IUpdateWorkResult<T>, IWorkResultManager<T>
-            collection.AddSingleton<IUrlRetrievalService, UrlRetrival>();
-            collection.AddSingleton<IRouteRepository, DbRouteRepository>();
+            collection.AddSingleton<IUrlRepository, UrlRepository>();
+            collection.AddSingleton<IActiveRouteManager, ActiveRoutesManager>();
             collection.AddSingleton<LogMessageFactory>();
             collection.AddSingleton<WorkerResultFactory<int>>();
             collection.AddSingleton<IWorkResultOrchestrator<WorkerResult<int>>, RouteManagerWorkerState>();

@@ -3,7 +3,6 @@
     public class ScaffoldAdapter : Peripherals
     {
         public Queue<ScaffoldingItem> ComponentHtml { get; set; }
-        public List<ChildOffset> RenderChildOffsets { get;set; }
 
         public ScaffoldAdapter(Guid guid, DateTime published)
         {
@@ -11,5 +10,5 @@
             Published = published;
         }
     }
-    public record ScaffoldingItem(Guid Guid, string html);
+    public record ScaffoldingItem(Guid Guid, string html, ChildOffset offset);
 }

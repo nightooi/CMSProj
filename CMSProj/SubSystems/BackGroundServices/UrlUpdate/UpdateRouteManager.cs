@@ -18,13 +18,13 @@
         Guid _workGuid;
         public Guid WorkGuid => _workGuid;
 
-        private IRouteRepository RouteRepository { get; set; }
+        private IActiveRouteManager RouteRepository { get; set; }
         public Task RunningTask => UpdateRoutes(_cancellationToken);
 
         private IWorkResultOrchestrator<WorkerResult<int>> _resultOrchestrator;
 
         public UpdateRouteManager(
-            IRouteRepository routeRepository, 
+            IActiveRouteManager routeRepository, 
             ILogger<UpdateRouteManager> logger, 
             IWorkResultOrchestrator<WorkerResult<int>> workResultOrchestrator)
         {

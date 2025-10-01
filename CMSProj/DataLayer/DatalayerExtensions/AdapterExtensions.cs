@@ -42,15 +42,13 @@ namespace CMSProj.DataLayer.DatalayerExtensions
         {
             var que = new Queue<ScaffoldingItem>();
             var childOff = new List<ChildOffset>();
-            var offs = scaffoldingComponents.OrderBy(x => x.SelfPageOrder).ToArray();
             int it = 0;
             foreach(var a in scaffoldingComponents.OrderBy(x => x.SelfPageOrder))
             {
-                que.Enqueue(new (a.Id, a.ComponentHtml));
-                childOff.Add(new ChildOffset { ComponentGuid = a.Id, RenderOffset = a.ChildOffset});
+
+                que.Enqueue(new(a.Id, a.ComponentHtml, new ChildOffset(a.Id, a.ChildOffset)));
             }
-            scaffold.ComponentHtml = que;
-            scaffold.RenderChildOffsets = childOff;
+            scaffold.ComponentHtml = new Queue<ScaffoldingItem>(que.ToList());
         }
         private static string Interpolateheaders(IComponentPeripheral value, Func<IComponentPeripheral, string?> propt)
         {

@@ -14,8 +14,7 @@ namespace CMSProj.DataLayer.PageServices.AdapterFactories
             return new ContentComponent(model.Id, model.Published)
             {
                 Assets = (IReadOnlyCollection<AssetAdapter>)model.Assets.ExtractAssetsExt(new AssetFactory().Create),
-                Content = JsonSerializer.Deserialize<CLRComponentContent>(model.PayLoad.Content),
-                Html = JsonSerializer.Deserialize<CLRComponentMarkup>(model.PayLoad.Markup),
+                HtmlMarkup = model.PayLoad.Markup,
                 HeaderContents = $"{model.OtherHeaders}\n {model.CssHeaderTags}\n {model.JsHeaderTags}",
                 ScaffoldAdapterId = model.PageComponentId ?? throw new ArgumentNullException("oopsieee... we have orphaned entries :)"),
                 JsContents = model.JsBodyTags,

@@ -18,12 +18,17 @@
     function show(ele) {
         $(ele).removeClass("d-none");
     }
-    function linkEdOp(c){
+    function linkEdOp(c) {
         const text = prompt("text for navigation item")
         const link = prompt("link for navigation item")
-
-        $(c).find('a').text(text)
-        $(c).find('a').attr('href', link)
+        $t = fTarget(c);
+        if ($t.is('a')) {
+            $t.text(text)
+            $t.attr('href', link)
+        }
+        $llink = $t.find('a');
+        $llink.attr('href', link)
+        $llink.text(text)
     }
     function delOp(c) {
         $(c).remove()
@@ -31,16 +36,30 @@
     function imgeEdOp(c) {
         const text = prompt("text for image")
         const link = prompt("src for image")
+        $t = fTarget(c);
+        if ($t.is('img')) {
+            $t.attr('src', link)
+            $t.attr('alt', text)
+        }
+        $img = $t.find('img')
 
-        $(c).find('img').attr('src', link)
-        $(c).find('img').attr('alt', text)
+        $img.attr('src', link);
+        $img.attr('src', link);
 
+    }
+    function fTarget(c) {
+        if ($(c).hasClass('target')) return $(c);
+        return $(c).find('.target').first()
     }
     function parEdOp(c) {
         const text = prompt("paragraph text")
-        $(c).find('p').text(text)
+        $t = fTarget(c)
+        if ($t.is('p')) { $t.text(text); return; }
+
+        $t.find('p').text(text)
     }
     function headingEdOp(c) {
+
         const hval = prompt("header num, 1-6")
         const parsed = parseInt(hval, 10)
         if (Number.isNaN(parsed) || parsed < 1 || parsed > 6) {
@@ -48,34 +67,39 @@
             return
         }
         const text = prompt("header text")
+        const $t = fTarget(c);
 
-        const $t = $(c).find('.target').first()
-        if (!$t.length) return
+        if ($t.length == 0) throw new DOMException("shit aint be working")
 
-        const cls = ($t[0].className || "").replace(/\btarget\b/, "").trim()
+        const cls = ($t[0].className || "")
         const style = $t.attr("style") || ""
 
         const $new = $(`<h${parsed}>`)
             .addClass(cls)
-            .addClass('target')
             .attr("style", style)
             .text(text)
-
+        
         $t.replaceWith($new)
+        attachAdminEvHandler($new.parent(), $new.parent().parent().find('.nav-item-opts').first())
     }
     function cssOp(a) {
-        c = ($(a).attr('class').includes('target') ? $(a) : $(a).find('target').first());
-        if (!c.length) throw new DOMException("we have a winnner")
-
-        res = ""
-        if (confirm('classes?')) {
-            re = prompt("enter css classes to add")
-            c.addClass(c)
-            return
+        const $t = ($(a).hasClass('target') ? $(a) : $(a).find('.target').first());
+        if (!$t.length) {
+            console.warn('no .target found'); return;
         }
-        re = prompt("enter styles")
-        style = c.attr("style")
-        c.attr("style", re + style)
+
+        if (confirm('(OK = classes, Cancel = inline styles)')) {
+            const cls = prompt("Enter CSS classes to add (space-separated)", "");
+            if (cls && cls.trim()) $t.addClass(cls.trim());
+            return;
+        }
+
+        const current = ($t.attr('style') || "").trim();
+        const input = prompt("(e.g. 'color:red; margin:4px;')", current);
+        if (input == null)
+            return;
+
+        $t.attr('style', input)
     }
     const opItem = {
         'A': linkEdOp,
@@ -83,10 +107,10 @@
         'H': headingEdOp,
         'P': parEdOp,
     }
-    function AdminHandlers(del,css, ops) {
+    function AdminHandlers(del, css, ops) {
         this.delop = del,
-        this.cssop = css,
-        this.edop = ops
+            this.cssop = css,
+            this.edop = ops
     }
     function c$(v) {
         if ((typeof v == 'string' || v instanceof String) && v.startsWith('#'))
@@ -110,7 +134,7 @@
     }
     function CHook(o, f) {
         this.obj = o,
-        this.fun = f
+            this.fun = f
     }
     function CPlace(p, c) {
         this.parent = p,
@@ -119,9 +143,9 @@
     }
     let deletedTemplateComponentIds = [];
     let _timer;
-    let elemList = [] 
-    let hookList = [] 
-    let placeList =[] 
+    let elemList = []
+    let hookList = []
+    let placeList = []
     const nvitemOp = '#nav-item-opts'
     const nvItem = '#h-nav-item'
     const nviAB = '#add-item'
@@ -162,7 +186,7 @@
         attachAdminElement(item)
         ops.edop['A'](item)
     }
-    
+
     function placeElem(elemp, elemc) {
         function moveIdToClass($el) {
             const id = ($el.attr('id') || '').trim()
@@ -224,8 +248,8 @@
     function attachAdminElement(client_item) {
         if (client_item === undefined || $(client_item).length == 0)
             return
-
-        aElem = placeElem(client_item.find('.target').first().parent(), $('#nav-item-opts'))
+        client_parent = $(client_item).find('.target').first().parent();
+        aElem = placeElem(client_parent, $('#nav-item-opts'))
         denotation(aElem, 'admin')
         attachAdminEvHandler(client_item, aElem)
     }
@@ -237,22 +261,22 @@
         if (!t.length) return;
 
         target = t[0].tagName;
-        target = target.startsWith('H') ? target.slice(0,1) : target;
+        target = target.startsWith('H') ? target.slice(0, 1) : target;
         admin_elem.find('button').each((i, x) => {
             type = $(x).attr('data-type')
             if (!type)
                 return;
 
             $elem = $(x);
-            switch(type) {
+            switch (type) {
                 case 'style':
-                    $elem.off('click').on('click',() => ops.cssop(t))
+                    $elem.off('click').on('click', () => ops.cssop(t))
                     break;
                 case 'remove':
                     $elem.off('click').on('click', () => ops.delop(client_item))
                     break;
                 case 'edit':
-                    $elem.off('click').on('click',() => ops.edop[target](t))
+                    $elem.off('click').on('click', () => ops.edop[target](t))
                     break;
                 default:
                     noop();
@@ -264,30 +288,30 @@
         if (!cb()) return;
 
         function asserHeaderExists() {
-            return $(cl).find(h).length > 0;
+            return $(cl).find(h).children().length > 0;
         }
         function buildheader() {
             if (asserHeaderExists()) {
                 function clearPrev() {
-                    const sH = $(cl).children(h);
-                    sH.empty();
+                    $(cl).children(h).empty();
                     hookList = new Array()
                     placeList = new Array()
                 }
                 clearPrev();
-                const sH = $(cl).children(h);
+                const sH = $($(cl).children(h).first());
                 const hUlC = $($(hUl).clone());
                 hUlC.addClass(hUl.slice(1).trim())
-                hUlC.appendTo(sH);
+                hUlC.prependTo(sH);
                 placeList.push(new CPlace(c$(hUlC), $(neA)))
                 placeElem();
                 console.log($(c$(hUl).find('button')));
                 hookList.push(new CHook($(c$(neA).find('button')), addNewMenuList));
                 siteBuilderLoop();
+                addNewMenuList()
             }
             else {
                 const $header = $('<header>');
-                $(cl).append($header);
+                $(cl).prepend($header);
                 buildheader();
             }
         }
@@ -295,7 +319,7 @@
     }
     function registerHook(hl) {
         hl.forEach((e) => {
-                console.log($(cl).find(e.obj));
+            console.log($(cl).find(e.obj));
         })
     }
 
@@ -303,7 +327,7 @@
         $(".adminelem").each((i, x) => {
             stateInvoker(state,
                 () => show(x),
-                () => hide(x) )
+                () => hide(x))
         })
     }
     function siteBuilderLoop() {
@@ -315,11 +339,11 @@
     }
 
     function stateInvoker(state, cb_OnState, cb_OffState) {
-         switch (state) {
-             case 'enable':
-                 cb_OnState()
+        switch (state) {
+            case 'enable':
+                cb_OnState()
                 break;
-             case 'disable':
+            case 'disable':
                 cb_OffState()
                 break;
         }
@@ -330,10 +354,10 @@
         clC.children().each((i, x) => {
         })
     }
-    
+
     function enableEdit(cb) {
         $('#page-edit-menu >').children().children().each((i, x) => {
-            if(x.id != 'de') $(x).addClass("d-none")
+            if (x.id != 'de') $(x).addClass("d-none")
             switch (x.id) {
 
                 case 'ap':
@@ -355,7 +379,7 @@
                 case 'de':
                     $(x).click(() => {
                         $(x).siblings().each((i, y) => {
-                            if(cb != null )
+                            if (cb != null)
                                 cb("enable")
                             if (($(y).hasClass("d-none"))) {
                                 show(y)
@@ -383,45 +407,47 @@
     }
 
     const run = (function () {
-        placeList.push(new CPlace($(cl).first(), $(cmpm).first()));
+        function s(i) {
+            return "."+i.slice(1)
+        }
+        placeList.push(new CPlace($('header').first(), $(cmpm)));
         placeElem();
-        hookList.push(new CHook(c$(nvAB), () => addHeaderNav(() => confirm("current header will be overridden"))));
-        hookList.push(new CHook(c$(haAB), addHeading));
-        hookList.push(new CHook(c$(teAB), addText));
-        hookList.push(new CHook(c$(lAB), addLink));
-        hookList.push(new CHook(c$(iAB), addImage));
+        hookList.push(new CHook($(s(nvAB)), () => addHeaderNav(() => confirm("current header will be overridden"))));
+        hookList.push(new CHook($(s(haAB)), addHeading));
+        hookList.push(new CHook($(s(teAB)), addText));
+        hookList.push(new CHook($(s(lAB)), addLink));
+        hookList.push(new CHook($(s(iAB)), addImage));
         $(cl).attr('ran', 'no')
     })
 
-    async function elementReAttachment() {
-        if (_timer) return;
+    function elementReAttachment() {
 
-            _timer = await new Promise(resolve => setInterval(() => attachAdminElement($(cl)
-            .children()
-            .find('.target')
-            .filter(function () { return $(this).parent().find('>.adminelem').length == 0 }).parent()), 20000))
+        $(cl).find('*[data-cmsrootcompguid').each(function () {
+            if ($(this).find('.adminelement').length == 0)
+                attachAdminElement($(this))
+        })
 
+        hUlC = $(cl).find('.' + hUl.slice(1))
+        if (hUlC && (hUlC).find('.' + neA.slice(1)).length == 0) {
+            placeList.push(new CPlace(c$(hUlC), $(neA)))
+            placeElem();
+            console.log($(c$(hUl).find('button')));
+            hookList.push(new CHook($(c$(neA).find('button')), addNewMenuList));
+            siteBuilderLoop();
+            reattachMenuList();
+           
+        }
     }
 
     function clearTemplates() {
-        const ids = [];
-        $(cl).each(function () { ids.push($(this).attr('id')); });
-        ids.push('page-edit-menu');
 
-        $(cl).children().each(function (_, el) {
-            const $el = $(el);
-            const classes = ($el.attr('class') || '').split(/\s+/);
-            let keep = false;
-            for (let i = 0; i < ids.length; i++) {
-                if (ids[i] && classes.includes(ids[i])) { keep = true; break; }
-            }
-            if (!keep) {
-                const guid = $el.attr('data-cmsrootcompguid');
-                if (guid) deletedTemplateComponentIds.push(guid);
-                $el.remove();
-            }
-        });
-        deletedTemplateComponentIds.forEach(x => console.log(x))
+        $elems = $(cl).children('[data-cmsrootcompguid]')
+            .filter(function () { return $(this)[0].tagName != 'HEADER' })
+        $elems.each(function() {
+            if ($(this).find('.target').length > 0) return;
+            deletedTemplateComponentIds.push($(this).attr('data-cmsrootcompguid'))
+            $(this).remove()
+        })
     }
     let __menuSeq = 0;
 
@@ -443,9 +469,9 @@
 
     function addListItem($list) {
         const $li = $('<div class="list-group-item flex-grow p-0 d-flex align-items-center"><a class="flex-grow-1 d-block py-2 px-3 text-decoration-none target" href="#">New Item</a></div>');
+        attachAdminElement($li);
         $list.append($li);
         denotation($li, 'client');
-        attachAdminElement($li);
     }
 
     function wireWrapperButtons($wrapper) {
@@ -459,7 +485,17 @@
             addListItem($list);
         });
     }
-
+    function reattachMenuList() {
+        document.querySelectorAll('.menu-list').forEach(el => {
+            $(el).parent()
+            initSortableList(el)
+        });
+        li = $(cl).find('.menu-list-wrapper');
+        li.each(function () {
+            wireWrapperButtons($(this))
+            $(this).find('.menu-list > .list-group-item').each((i, x) => attachAdminElement(x))
+        })
+    }
     function addNewMenuList() {
         const $host = $(cl).find('.header-ul').first();
         if ($host.length == 0) return;
@@ -472,13 +508,16 @@
         $wrap.find('.list-group-item').each(function () {
             const $it = $(this);
             denotation($it, 'client');
-            attachAdminElement($it);
+            attachAdminElement(fTarget($it));
         });
     }
     function pureSlug(url = undefined) {
+        let surl = String(url).toLowerCase();
+        if (url == undefined)
+            surl = window.location.pathname.toLowerCase();
 
-        let p = (url == undefined) ? location.pathname.replace("/^\/+/", "") : url.replace("/^\/+/", '');
-        return p.slice(6);
+        u = surl.startsWith('admin/') || surl.startsWith('/admin/') ? surl.slice(6) : surl;
+        return u.startsWith('/') ? u.slice(1) : u;
     }
     function showStatus(ok, code, text) {
         const $b = $('#cms-status');
@@ -493,36 +532,59 @@
 
     // payload builders
     function buildDeletes() {
-
-        return (deletedTemplateComponentIds || []).map(g => ({
+        dels = []
+        if (deletedTemplateComponentIds.length == 0) {
+            $(cl).children("[data-cmsrootcompguid]").each((i, x) => {
+                dels.push(
+                    {
+                        choice: 1,
+                        contentType: 0,
+                        value: "string",
+                        pageOrder: 0,
+                        componentGuid: $(x).attr("data-cmsrootcompguid")
+                    }
+                )
+            })
+            return dels;
+        }
+        dels = (deletedTemplateComponentIds || []).map(g => ({
             choice: 1,
             contentType: 0,
             value: "string",
             pageOrder: 0,
-            componentGuid: "74f78db3-3697-4b45-938f-08ddf1171f3c"
+            componentGuid: g
         }));
+        deletedTemplateComponentIds = []
+        return dels;
+    }
+    function buildAdds() {
+        adds = []
+        $(cl).children().filter(function () {
+            return $(this)[0].tagName != 'HEADER'
+        }).each((i, x) => {
+            adds.push({
+                choice: 0,
+                contentType: 0,
+                value: serializeOuter(x),
+                pageOrder: i,
+                componentGuid: "00000000-0000-0000-0000-000000000000"
+            })
+        })
+        return adds
     }
     function serializeOuter(el) {
         const $c = $(el).clone(true, false);
-        return $('<div>').append($c).html();
-    }
-    const adds = buildAdds();
-    if (adds.length) {
-        try {
-            const res = await fetch('/api/ContentManager', {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ Url: pureSlug(), ContentEdits: adds })
-            });
-            showStatus(res.ok, res.status, res.ok ? `added ${adds.length}` : 'add failed');
-        } catch (e) {
-            showStatus(false, 0, 'network adding');
-        }
-    } else {
-        showStatus(true, 200, `deleted ${okCount}/${ids.length}`);
-    }
-} 
+        $c.find('.adminelem, #nav-item-opts, #component-manager,'
+            + ' .page-edit-menu, .nav-item-opts, .component-manager, .nav-edit-activate').remove();
 
+        $c.find('.adminelem').removeClass('adminelem');
+
+        $c.find('.drag-ghost').removeClass('drag-ghost');
+        $c.find('[draggable]').removeAttr('draggable');
+        if ($c.is('header')) return $c[0].outerHTML
+
+        return $c[0].outerHTML;
+    }
     // calls
     async function apiCreatePage() {
         const pg = prompt('url')
@@ -550,10 +612,36 @@
             showStatus(res.ok, res.status);
         } catch (e) { showStatus(false, 0, 'network'); }
     }
-    async function apiUpdatePage() {
+    async function apiUpdateMenu() {
+        $header = $($(cl).find("header").first());
+        guid = $header.attr('data-cmsrootcompguid')
+        const body = {
+            url: pureSlug(),
+            cms_root_component: guid,
+            cmsedit_subcomponent: guid,
+            choice: 3,
+            value: serializeOuter($header.children().first())
+        };
+        try {
+            const res = await fetch('/api/ContentManager/SubComp', {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(body)
+            })
+            showStatus(res.ok, res.status);
+        } catch (e) {
+            showStatus(false, 0, res.text().json())
+        }
+    }
+
+    async function apiUpdatePageAdds() {
+        await apiUpdateCall(buildAdds())
+    }
+    async function apiUpdateCall(items) {
+
         const payload = {
             url: pureSlug(),
-            contentEdits: [...buildDeletes(), ...buildAdds()]
+            contentEdits: [...items]
         };
         console.log(payload.contentEdits)
         try {
@@ -564,7 +652,23 @@
                 body: JSON.stringify(payload)
             });
             showStatus(res.ok, res.status);
+            return res;
+
         } catch (e) { showStatus(false, 0, 'network'); }
+    }
+    async function apiUpdatePageDeletes() {
+        await apiUpdateCall(buildDeletes())
+    }
+    async function apiUpdatePage() {
+        var adds = buildAdds();
+        console.log(`adds ::: ${adds}`, adds);
+        var del = buildDeletes();
+        let res = {}
+        if (del.length > 0)
+            res = await apiUpdateCall(del)
+
+        await apiUpdateCall(adds)
+        await apiUpdateMenu();
     }
 
     $(document).on('click', '#ap', function (e) { e.stopPropagation(); apiCreatePage(); });
@@ -576,5 +680,6 @@
     siteBuilderLoop();
     attachAdminElement()
     elementReAttachment();
-});
+
+   });
 

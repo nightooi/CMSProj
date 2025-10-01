@@ -56,7 +56,7 @@ namespace ContentDatabase
                 .HasOne(x => x.Page)
                 .WithMany(x => x.PageVersions)
                 .OnDelete(DeleteBehavior.Restrict)
-                .IsRequired(true);
+                .IsRequired(false);
 
             modelBuilder.Entity<PageComponent>()
                 .HasMany(x => x.Assets)
@@ -75,7 +75,7 @@ namespace ContentDatabase
                 .HasOne(x => x.PageComponent)
                 .WithMany(x => x.AuthoredComponent)
                 .IsRequired(false)
-                .OnDelete(DeleteBehavior.NoAction);
+                .OnDelete(DeleteBehavior.Restrict);
 
             modelBuilder.Entity<AuthoredComponent>()
                 .HasOne(x => x.PageVersion)
