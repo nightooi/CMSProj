@@ -418,7 +418,8 @@
         hookList.push(new CHook($(s(teAB)), addText));
         hookList.push(new CHook($(s(lAB)), addLink));
         hookList.push(new CHook($(s(iAB)), addImage));
-        hookList.push(new CHook($(s('#form-deff')), addForm));
+        hookList.push(new CHook($(s('#add-form')), addForm));
+        hookList.forEach((i, x) => console.log(`${i}--${x}`));
         $(cl).attr('ran', 'no')
     })
 

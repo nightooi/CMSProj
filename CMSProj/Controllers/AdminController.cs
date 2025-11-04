@@ -54,6 +54,7 @@ namespace CMSProj.Controllers
         }
         [HttpGet]
         [Authorize(Roles="Admin")]
+        [Route("~/Contact")]
         public async Task<IActionResult> Index(CancellationToken ct)
         {
             var list = await _mgr.GetAllAsync(ct);

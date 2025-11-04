@@ -1685,7 +1685,7 @@ namespace CMSProj.Controllers
             html.LoadHtml(Temp);
 
             var parent = html.DocumentNode.
-                SelectSingleNode("/div | /header");
+                SelectSingleNode("/*");
 
             splitHtml[1] = parent.InnerHtml;
             parent.RemoveAllChildren();

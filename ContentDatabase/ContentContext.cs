@@ -2,9 +2,6 @@
 
 using Microsoft.EntityFrameworkCore;
 
-using System.Diagnostics.Metrics;
-using System.Runtime.InteropServices;
-
 namespace ContentDatabase
 {
     /// <summary>
@@ -12,7 +9,7 @@ namespace ContentDatabase
     /// 
     /// Shape of the relation between the content and the tags is ill defined, or rather the shape of the authored component
     /// </summary>
-    public class ContentContext : DbContext
+    public class ContentContext : Microsoft.EntityFrameworkCore.DbContext
     {
         public DbSet<AssetFileType> AssetFileTypes { get; set; }
         public DbSet<AssetHostDomain> AssetHostDomains { get; set; }

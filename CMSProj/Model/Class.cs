@@ -2,10 +2,9 @@
 {
     using ContentDatabase;
     using ContentDatabase.Model;
-
     using System;
     using System.ComponentModel.DataAnnotations;
-    using System.Data.Entity;
+    using Microsoft.EntityFrameworkCore;
 
     public class ContactFormVm
     {
@@ -35,7 +34,7 @@
         public ContactRepo(ContentContext db) { _db = db; }
 
         public Task<int> CountAsync(CancellationToken ct = default)
-            => _db.ContacUsers.CountAsync(ct);
+            => _db.ContacUsers.CountAsync();
 
         public async Task AddAsync(ContatUser entity, CancellationToken ct = default)
         {
