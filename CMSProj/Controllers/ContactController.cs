@@ -23,6 +23,7 @@
         [HttpGet]
         public IActionResult Thanks(Guid id, string name, int pos)
         {
+            //restage
             ViewBag.Id = id;
             ViewBag.Name = name;
             ViewBag.Position = pos;
