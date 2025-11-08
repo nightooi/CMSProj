@@ -1,13 +1,11 @@
 # Feature Add
 
-<!--issue reference -->
 ## Issue Reference
 #xxxx
 
 <!--resolve approach -->
 - ## Approach Desc: 
   -  ### reasoning
-
 
 <!-- docs -->
   - ## Docs References
