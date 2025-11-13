@@ -36,6 +36,7 @@ public class ActiveRoutesManager : IActiveRouteManager, IPostActivator<IActiveRo
     public void GetAvailableRoutes()
     {
         var res = UrlRetrievalService.GetUrls();
+        _existingRoutes = new HashSet<string>(res.Select(x => x.PageUrl)).Order();
         AddUrls(res);
     }
     private void AddUrls(ICollection<UrlGuidAdapter> urlCollection)
